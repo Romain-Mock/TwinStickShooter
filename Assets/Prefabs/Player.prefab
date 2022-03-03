@@ -217,9 +217,6 @@ MonoBehaviour:
   moveSpeed: 5
   rotateSpeed: 10
   rotateSmooth: 1
-  fireRate: 200
-  fireSpeed: 10
-  shootDistance: 20
 --- !u!1 &6290465110210429027
 GameObject:
   m_ObjectHideFlags: 0
@@ -233,6 +230,7 @@ GameObject:
   - component: {fileID: 6290465110210429024}
   - component: {fileID: 6290465110210429025}
   - component: {fileID: 2386268756217228249}
+  - component: {fileID: 5658164592643416037}
   m_Layer: 0
   m_Name: Weapon
   m_TagString: Untagged
@@ -414,3 +412,16 @@ LineRenderer:
     generateLightingData: 0
   m_UseWorldSpace: 1
   m_Loop: 0
+--- !u!114 &5658164592643416037
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6290465110210429027}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0c2d7aba9c08c245b3b1616938826e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stats: {fileID: 0}

@@ -6,10 +6,9 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     private Rigidbody rb;
-    private Transform weaponTransform;
+    private Weapon weapon;
     private PlayerInput playerInput;
     private PlayerInputActions playerInputAction;
-    private LineRenderer line;
 
     Vector3 mouseWorldPos;
 
@@ -22,19 +21,12 @@ public class PlayerController : MonoBehaviour
     public float rotateSpeed = 6f;
     public bool rotateSmooth;
 
-    public float fireRate = 15f;
-    public float delayBetweenShots = 0.19f;
-    public float maxShotDistance = 20f;
-    private float nextPossibleShootTime = 0f;
-    IEnumerator currentCoroutine;
-
     // Start is called before the first frame update
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        weaponTransform = transform.GetChild(0).transform;
+        weapon = transform.GetChild(0).GetComponent<Weapon>();
         playerInput = GetComponent<PlayerInput>();
-        line = weaponTransform.GetComponent<LineRenderer>();
 
         playerInputAction = new PlayerInputActions();
         playerInputAction.Player.Enable();
@@ -42,11 +34,6 @@ public class PlayerController : MonoBehaviour
         //playerInputAction.Player.FireMouse.performed += FireMouse;
 
         //playerInputAction.Player.FireGamepad.performed += FireGamepad;
-    }
-
-    private void Start()
-    {
-        delayBetweenShots = 60 / fireRate;
     }
 
     void FixedUpdate()
@@ -60,17 +47,16 @@ public class PlayerController : MonoBehaviour
         //If the player is moving
         if (movement != Vector3.zero)
         {
-            //If the player is aiming and moving
+            //If the player is aiming while moving
             if (aimDirection != Vector3.zero)
             {
                 Rotate(aimDirection);
-                Shoot();
+                weapon.Shoot();
             }
             else
             {
                 Rotate(movement);
-                if (currentCoroutine != null)
-                    StopCoroutine(currentCoroutine);
+                weapon.StopShooting();
             }
 
             rb.position += movement * moveSpeed * Time.fixedDeltaTime;
@@ -81,13 +67,11 @@ public class PlayerController : MonoBehaviour
             if (aimDirection != Vector3.zero)
             {
                 Rotate(aimDirection);
-                Shoot();
+                weapon.Shoot();
             }
             else
-                if (currentCoroutine != null)
-                    StopCoroutine(currentCoroutine);
+                weapon.StopShooting();
         }
-
     }
 
     public void LookMouse(InputAction.CallbackContext context)
@@ -103,31 +87,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void FireGamepad(InputAction.CallbackContext context)
-    {
-        Vector2 aimInput = playerInputAction.Player.FireGamepad.ReadValue<Vector2>();
-        Vector3 aimDirection = new Vector3(aimInput.x, 0, aimInput.y).normalized;
-        Rotate(aimDirection);
-
-        Ray ray = new Ray(weaponTransform.position, weaponTransform.forward);
-        RaycastHit hitInfo;
-        float shotDistance = maxShotDistance;
-
-        if (Physics.Raycast(ray, out hitInfo, maxShotDistance))
-        {
-            shotDistance = hitInfo.distance;
-        }
-
-        if (aimDirection != Vector3.zero)
-        {
-            StartCoroutine(Fire(delayBetweenShots, shotDistance));
-        }
-        else
-        {
-            StopCoroutine(Fire(delayBetweenShots, shotDistance));
-        }
-    }
-
     void Rotate(Vector3 direction)
     {
         if (direction != Vector3.zero)
@@ -139,29 +98,5 @@ public class PlayerController : MonoBehaviour
 
             rb.MoveRotation(targetRotation);
         }
-    }
-
-    void Shoot()
-    {
-        Ray ray = new Ray(weaponTransform.position, weaponTransform.forward);
-        RaycastHit hitInfo;
-        float shotDistance = maxShotDistance;
-
-        if (Physics.Raycast(ray, out hitInfo, maxShotDistance))
-        {
-            shotDistance = hitInfo.distance;
-        }
-
-        currentCoroutine = Fire(delayBetweenShots, shotDistance);
-        StartCoroutine(currentCoroutine);
-    }
-
-    IEnumerator Fire(float delay, float distance)
-    {
-        line.enabled = true;
-        line.SetPosition(0, weaponTransform.position);
-        line.SetPosition(1, weaponTransform.position + weaponTransform.forward * distance);
-        yield return new WaitForSeconds(delay);
-        line.enabled = false;
     }
 }
