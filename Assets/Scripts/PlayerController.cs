@@ -10,10 +10,16 @@ public class PlayerController : MonoBehaviour
     private PlayerInput playerInput;
     private PlayerInputActions playerInputAction;
     private Animator animator;
-
+    public Transform aimTarget;
+    public float height;
     Vector3 mouseWorldPos;
 
+    public enum PlayerState { Idle, OnlyMoving, OnlyAiming, MovingAndAiming };
+    PlayerState currentState;
+
     Vector2 aimInput;
+
+    Vector3 activeDirection;
 
     private float xMovement;
     private float zMovement;
@@ -25,7 +31,6 @@ public class PlayerController : MonoBehaviour
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        weapon = transform.GetComponentInChildren<Weapon>();
         playerInput = GetComponent<PlayerInput>();
         animator = GetComponent<Animator>();
 
@@ -33,62 +38,109 @@ public class PlayerController : MonoBehaviour
         playerInputAction.Player.Enable();
     }
 
+    private void Start()
+    {
+        weapon = GameObject.FindObjectOfType<Weapon>();
+    }
+
     void FixedUpdate()
     {
         Vector2 inputVector = playerInputAction.Player.Move.ReadValue<Vector2>();   //Movement input (ZQSD / Left stick)
         Vector3 movement = new Vector3(inputVector.x, 0, inputVector.y).normalized; //Movement normalized in 3D
+        Vector3 movePos = new Vector3(inputVector.x * 5, 3, inputVector.y * 5);
 
         Vector2 aimInput = playerInputAction.Player.FireGamepad.ReadValue<Vector2>();   //Aiming input (Mouse / Right stick)
         Vector3 aimDirection = new Vector3(aimInput.x, 0, aimInput.y).normalized;   //Aiming normalized in 3D
+        Vector3 targetPos = new Vector3(aimInput.x * 5, 3, aimInput.y * 5);
 
-        //If the player is moving
-        if (movement != Vector3.zero)
+        currentState = GetPlayerState(movement, aimDirection);
+
+        switch (currentState)
         {
-            //If the player is aiming while moving
-            if (aimDirection != Vector3.zero)
-            {
-                Rotate(aimDirection);  
+            case PlayerState.OnlyMoving:
 
-                float normalizedAngle = Vector3.Angle(movement, aimDirection) / 180;    //Calaculate the angle between movement and aim and normalize it from 0 to 1
-
-                animator.SetBool("isShooting", true);   //Animation conditions
-                animator.SetFloat("angle", normalizedAngle);
-
-                weapon.Shoot();
-                
-            }
-            else
-            {
                 Rotate(movement);
 
+                aimTarget.position = transform.position + movePos;
+
+                animator.SetBool("isMoving", true);
                 animator.SetBool("isShooting", false);
 
                 weapon.StopShooting();
-            }
+                rb.position += movement * moveSpeed * Time.fixedDeltaTime;
 
-            animator.SetBool("isMoving", true);
-            //Movement
-            rb.position += movement * moveSpeed * Time.fixedDeltaTime;
-        }
-        else
-        {
-            animator.SetBool("isMoving", false);
-            //If the player is aiming without moving
-            if (aimDirection != Vector3.zero)
-            {
+                break;
+
+            case PlayerState.OnlyAiming:
+
                 Rotate(aimDirection);
 
+                aimTarget.position = transform.position + targetPos;
+
+                animator.SetBool("isMoving", false);
                 animator.SetBool("isShooting", true);
 
                 weapon.Shoot();
+                break;
+
+            case PlayerState.MovingAndAiming:
+
+                Rotate(aimDirection);
+
+                aimTarget.position = transform.position + targetPos;
+
+                animator.SetBool("isMoving", true);
+                animator.SetBool("isShooting", true);   //Animation conditions
+
+                float normalizedAngle = Vector3.Angle(movement, aimDirection) / 180;    //Calaculate the angle between movement and aim and normalize it from 0 to 1
+                animator.SetFloat("angle", normalizedAngle);
+
+                weapon.Shoot();
+                rb.position += movement * moveSpeed * Time.fixedDeltaTime;
+                break;
+
+            case PlayerState.Idle:
+
+                aimTarget.position = transform.position + new Vector3(transform.forward.x * 5, 3, transform.forward.z * 5);
+
+                weapon.StopShooting();
+                animator.SetBool("isMoving", false);
+                animator.SetBool("isShooting", false);
+                break;
+        }
+    }
+
+    PlayerState GetPlayerState(Vector3 movement, Vector3 aim)
+    {
+        PlayerState state;
+
+        if (movement != Vector3.zero)
+        {
+            if (aim != Vector3.zero)
+            {
+                state = PlayerState.MovingAndAiming;
             }
             else
             {
-                weapon.StopShooting();
-
-                animator.SetBool("isShooting", false);
+                state = PlayerState.OnlyMoving;
             }
         }
+        else
+        {
+            if (aim != Vector3.zero)
+            {
+                state = PlayerState.OnlyAiming;
+
+                if (movement != Vector3.zero)
+                    state = PlayerState.MovingAndAiming;
+            }
+            else
+            {
+                state = PlayerState.Idle;
+            }
+        }
+
+        return state;
     }
 
     //Rotate the player to look at the mouse

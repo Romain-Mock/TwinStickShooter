@@ -5,6 +5,8 @@ using UnityEngine;
 public class Weapon : MonoBehaviour
 {
     public WeaponData stats;
+    public Transform cannon;
+    public Transform anchor;
 
     LineRenderer line;
 
@@ -19,12 +21,23 @@ public class Weapon : MonoBehaviour
         SetGradient();
 
         delayBetweenShots = 60 / stats.fireRate;
+
+        transform.position = anchor.position;
+        transform.SetParent(anchor);
+    }
+
+    private void Update()
+    {
+        Debug.DrawRay(cannon.position, cannon.forward * 10, Color.red);
     }
 
     public void Shoot()
     {
-        Debug.DrawRay(transform.position, transform.forward * stats.range, Color.green);
-        Ray ray = new Ray(transform.position, transform.forward);
+        Vector3 forwardXZ = cannon.forward;
+        //forwardXZ.y = 0;
+
+        Debug.DrawRay(cannon.position, forwardXZ * stats.range, Color.green);
+        Ray ray = new Ray(cannon.position, forwardXZ);
         RaycastHit hitInfo;
         float shotDistance = stats.range;
 
@@ -38,7 +51,7 @@ public class Weapon : MonoBehaviour
             }
         }
 
-        currentCoroutine = RenderLine(delayBetweenShots, shotDistance);
+        currentCoroutine = RenderLine(delayBetweenShots, forwardXZ, shotDistance);
         StartCoroutine(currentCoroutine);
     }
 
@@ -48,11 +61,11 @@ public class Weapon : MonoBehaviour
             StopCoroutine(currentCoroutine);
     }
 
-    IEnumerator RenderLine(float delay, float distance)
+    IEnumerator RenderLine(float delay, Vector3 forward, float distance)
     {
         line.enabled = true;
-        line.SetPosition(0, transform.position);
-        line.SetPosition(1, transform.position + transform.forward * distance);
+        line.SetPosition(0, cannon.position);
+        line.SetPosition(1, cannon.position + forward * distance);
         yield return new WaitForSeconds(delay);
         line.enabled = false;
     }
