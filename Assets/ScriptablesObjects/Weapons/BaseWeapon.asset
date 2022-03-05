@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: BaseWeapon
   m_EditorClassIdentifier: 
   damage: 50
-  fireRate: 100
+  fireRate: 10
   range: 20
+  bulletSpeed: 100
   startColor: {r: 0, g: 0.13798285, b: 1, a: 0}
   endColor: {r: 1, g: 0, b: 0.9483285, a: 0}
+  fireEffect: {fileID: 560415909626385238, guid: 5a531c7da9f62144ca41f8dd19f6829c, type: 3}

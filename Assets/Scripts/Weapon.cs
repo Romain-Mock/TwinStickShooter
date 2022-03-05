@@ -7,10 +7,12 @@ public class Weapon : MonoBehaviour
     public WeaponData stats;
     public Transform cannon;
     public Transform anchor;
+    public Transform crosshair;
 
     LineRenderer line;
 
     float delayBetweenShots = 0f;
+    float nextTimeToFire = 0;
 
     IEnumerator currentCoroutine = null;
 
@@ -24,35 +26,42 @@ public class Weapon : MonoBehaviour
 
         transform.position = anchor.position;
         transform.SetParent(anchor);
-    }
-
-    private void Update()
-    {
-        Debug.DrawRay(cannon.position, cannon.forward * 10, Color.red);
+        transform.LookAt(crosshair);
     }
 
     public void Shoot()
     {
-        Vector3 forwardXZ = cannon.forward;
-        //forwardXZ.y = 0;
-
-        Debug.DrawRay(cannon.position, forwardXZ * stats.range, Color.green);
-        Ray ray = new Ray(cannon.position, forwardXZ);
-        RaycastHit hitInfo;
-        float shotDistance = stats.range;
-
-        if (Physics.Raycast(ray, out hitInfo, stats.range))
+        if (Time.time >= nextTimeToFire)
         {
-            shotDistance = hitInfo.distance;
+            nextTimeToFire = Time.time + 1f / stats.fireRate;
 
-            if (hitInfo.transform.GetComponent<Enemy>())
+            Vector3 forwardXZ = cannon.forward;
+            forwardXZ.y = 0;
+
+            Debug.DrawRay(cannon.position, forwardXZ * stats.range, Color.green);
+            Ray ray = new Ray(cannon.position, forwardXZ);
+            RaycastHit hitInfo;
+            float shotDistance = stats.range;
+
+            GameObject go = (GameObject)Instantiate(stats.fireEffect, cannon.position, transform.localRotation);
+            go.GetComponent<Bullet>().SetSpeed(stats.bulletSpeed);
+            go.transform.localRotation = transform.rotation;
+            Destroy(go, 2f);
+
+            if (Physics.Raycast(ray, out hitInfo, stats.range))
             {
-                hitInfo.transform.GetComponent<Enemy>().TakeDamage(stats.damage);
-            }
-        }
+                shotDistance = hitInfo.distance;
 
-        currentCoroutine = RenderLine(delayBetweenShots, forwardXZ, shotDistance);
-        StartCoroutine(currentCoroutine);
+                if (hitInfo.transform.GetComponent<Enemy>())
+                {
+                    hitInfo.transform.GetComponent<Enemy>().TakeDamage(stats.damage);
+                }
+            }
+
+            currentCoroutine = RenderLine(delayBetweenShots, forwardXZ, shotDistance);
+            //StartCoroutine(currentCoroutine);
+        }
+        
     }
 
     public void StopShooting()
@@ -66,7 +75,7 @@ public class Weapon : MonoBehaviour
         line.enabled = true;
         line.SetPosition(0, cannon.position);
         line.SetPosition(1, cannon.position + forward * distance);
-        yield return new WaitForSeconds(delay);
+        yield return null;
         line.enabled = false;
     }
 
