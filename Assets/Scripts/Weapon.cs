@@ -2,17 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class Weapon : MonoBehaviour
 {
-    public WeaponData stats;
+    public WeaponData weaponData;
     public Transform cannon;
     public Transform anchor;
     public Transform crosshair;
 
     LineRenderer line;
+    new AudioSource audio;
 
-    float delayBetweenShots = 0f;
-    float nextTimeToFire = 0;
+    float lastShootTime = 0;
 
     IEnumerator currentCoroutine = null;
 
@@ -20,45 +21,64 @@ public class Weapon : MonoBehaviour
     {
         line = GetComponent<LineRenderer>();
 
-        SetGradient();
-
-        delayBetweenShots = 60 / stats.fireRate;
+        SetAudioSource(weaponData.sfxData);
 
         transform.position = anchor.position;
         transform.SetParent(anchor);
-        transform.LookAt(crosshair);
+        //transform.LookAt(crosshair);
     }
 
     public void Shoot()
     {
-        if (Time.time >= nextTimeToFire)
+        if (lastShootTime + weaponData.fireRate < Time.time)
         {
-            nextTimeToFire = Time.time + 1f / stats.fireRate;
-
-            Vector3 forwardXZ = cannon.forward;
-            forwardXZ.y = 0;
-
-            Debug.DrawRay(cannon.position, forwardXZ * stats.range, Color.green);
-            Ray ray = new Ray(cannon.position, forwardXZ);
-            RaycastHit hitInfo;
-            float shotDistance = stats.range;
-
-            GameObject go = (GameObject)Instantiate(stats.fireEffect, cannon.position, transform.localRotation);
-            go.GetComponent<Bullet>().SetSpeed(stats.bulletSpeed);
-            go.transform.localRotation = transform.rotation;
-            Destroy(go, 2f);
-
-            if (Physics.Raycast(ray, out hitInfo, stats.range))
+            switch (weaponData.weaponType)
             {
-                shotDistance = hitInfo.distance;
+                case WeaponData.WeaponType.Hitscan:
 
-                if (hitInfo.transform.GetComponent<Enemy>())
-                {
-                    hitInfo.transform.GetComponent<Enemy>().TakeDamage(stats.damage);
-                }
+                    Vector3 forwardXZ = cannon.forward;
+                    forwardXZ.y = 0;
+
+                    Debug.DrawRay(cannon.position, forwardXZ * weaponData.range, Color.green);
+                    Ray ray = new Ray(cannon.position, forwardXZ);
+                    RaycastHit hitInfo;
+                    float shotDistance = weaponData.range;
+                    GameObject vfx = Instantiate(weaponData.fireVFX, cannon.position, transform.rotation);
+                    TrailRenderer trail = Instantiate(weaponData.trailVFX, cannon.position, transform.rotation).GetComponent<TrailRenderer>();
+
+                    Destroy(vfx, 1f);
+                    if (Physics.Raycast(ray, out hitInfo, weaponData.range))
+                    {
+                        shotDistance = hitInfo.distance;
+
+                        StartCoroutine(SpawnTrail(trail, hitInfo));
+
+                        if (hitInfo.transform.GetComponent<Enemy>())
+                        {
+                            hitInfo.transform.GetComponent<Enemy>().TakeDamage(weaponData.damage);
+                        }
+                    }
+                    else
+                    {
+                        StartCoroutine(SpawnTrail(trail, weaponData.range));
+                    }
+
+                    break;
+
+                case WeaponData.WeaponType.Instantiate:
+
+                    GameObject go = Instantiate(weaponData.fireVFX, cannon.position, transform.localRotation);
+                    go.GetComponent<Bullet>().SetSpeed(weaponData.bulletSpeed);
+                    go.transform.localRotation = transform.rotation;
+
+                    break;
             }
 
-            currentCoroutine = RenderLine(delayBetweenShots, forwardXZ, shotDistance);
+            audio.Play();
+
+            lastShootTime = Time.time;
+
+            //currentCoroutine = RenderLine(delayBetweenShots, forwardXZ, shotDistance);
             //StartCoroutine(currentCoroutine);
         }
         
@@ -79,21 +99,48 @@ public class Weapon : MonoBehaviour
         line.enabled = false;
     }
 
-    void SetGradient()
+    IEnumerator SpawnTrail(TrailRenderer trail, RaycastHit hit)
     {
-        Gradient gradient = new Gradient();
-        GradientColorKey[] colorKey = new GradientColorKey[2];
-        colorKey[0].color = stats.startColor;
-        colorKey[0].time = 0f;
-        colorKey[1].color = stats.endColor;
-        colorKey[1].time = 1f;
-        GradientAlphaKey[] alphaKey = new GradientAlphaKey[2];
-        alphaKey[0].alpha = 1f;
-        alphaKey[0].time = 0f;
-        alphaKey[1].alpha = 1f;
-        alphaKey[1].time = 1f;
-        gradient.SetKeys(colorKey, alphaKey);
+        float time = 0;
+        Vector3 startPosition = trail.transform.position;
 
-        line.colorGradient = gradient;
+        while (time < 1)
+        {
+            trail.transform.position = Vector3.Lerp(startPosition, hit.point, time);
+            time += Time.deltaTime / trail.time;
+
+            yield return null;
+        }
+
+        trail.transform.position = hit.point;
+        Instantiate(weaponData.impactVFX, hit.point, Quaternion.LookRotation(hit.normal));
+
+        Destroy(trail.gameObject, trail.time);
+    }
+
+    IEnumerator SpawnTrail(TrailRenderer trail, float distance)
+    {
+        float time = 0;
+        Vector3 startPosition = trail.transform.position;
+
+        while (time < 1)
+        {
+            trail.transform.position = Vector3.Lerp(startPosition, startPosition + trail.transform.forward * distance, time);
+            time += Time.deltaTime / trail.time;
+
+            yield return null;
+        }
+
+        Destroy(trail.gameObject, trail.time);
+    }
+
+    void SetAudioSource(SFXData data)
+    {
+        audio = GetComponent<AudioSource>();
+
+        audio.clip = data.audioClip;
+        audio.priority = data.priority;
+        audio.volume = data.volume;
+        audio.pitch = data.pitch;
     }
 }

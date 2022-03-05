@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(Rigidbody), typeof(PlayerInput), typeof(Animator))]
 public class PlayerController : MonoBehaviour
 {
     private Rigidbody rb;

@@ -14,6 +14,12 @@ public class Bullet : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        transform.position += transform.forward * (speed * Time.fixedDeltaTime);
+        Vector3 forward = new Vector3(transform.forward.x, 0, transform.forward.z);
+        transform.position += forward * (speed * Time.fixedDeltaTime);
+    }
+
+    private void OnBecameInvisible()
+    {
+        Destroy(gameObject);
     }
 }
