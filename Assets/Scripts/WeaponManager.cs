@@ -136,21 +136,22 @@ public class WeaponManager : MonoBehaviour
         //If the weapon is hitscan 
         if (currentWeapon.weaponData.weaponType == WeaponData.WeaponType.Hitscan)
         {
-            //Shoot the weapon
-            RaycastHit hitInfo = GetActiveWeapon().GetComponent<Weapon>().ShootHitscan();
-            //Instantiate the muzzle and trail vfx
-            SpawnEffects(hitInfo);
+            GetActiveWeapon().GetComponent<Weapon>().ShootHitscan();
+            ////Shoot the weapon
+            //RaycastHit hitInfo = GetActiveWeapon().GetComponent<Weapon>().ShootHitscan();
+            ////Instantiate the muzzle and trail vfx
+            //SpawnEffects(hitInfo);
         }
     }
 
     //Spawn the vfx
-    public void SpawnEffects(RaycastHit hit)
+    public void SpawnEffects(Vector3 hitPoint, Vector3 hitNormal)
     {
         Weapon weap = GetActiveWeapon().GetComponent<Weapon>();
         GameObject vfx = Instantiate(weap.weaponData.fireVFX, weap.cannon.position, transform.rotation);  //Instnatiate the particules effets on the cannon
         TrailRenderer trail = Instantiate(weap.weaponData.trailVFX, weap.cannon.position, Quaternion.identity).GetComponent<TrailRenderer>(); //Instantiate the trail particules along the raycast
         Destroy(vfx, 1f); //Destroying the cannon VFX
-        StartCoroutine(MoveTrail(weap.weaponData, trail, hit.point, hit.normal));
+        StartCoroutine(MoveTrail(weap.weaponData, trail, hitPoint, hitNormal));
     }
 
     //Move the trail gameobject towards the hit point (or max range if nothing is hit) and instantiate impact VFX
@@ -173,7 +174,7 @@ public class WeaponManager : MonoBehaviour
         trail.transform.position = hitPoint;
 
         //If the raycast hit something, instantiate impact VFX
-        if (hitNormal != null)
+        if (hitNormal != Vector3.zero)
         {
             GameObject go = Instantiate(data.impactVFX, hitPoint, Quaternion.LookRotation(hitNormal));
             Destroy(go, 1f);

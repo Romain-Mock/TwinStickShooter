@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponType: 0
   damage: 10
-  fireRate: 0.6
+  fireRate: 10
   range: 20
   addSpread: 0
   sfxData: {fileID: 11400000, guid: b6a9457a0cfae0542bb1b3fb39ede048, type: 2}

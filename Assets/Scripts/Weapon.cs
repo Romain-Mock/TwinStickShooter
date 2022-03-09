@@ -5,6 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(AudioSource))]
 public class Weapon : MonoBehaviour
 {
+    public WeaponManager manager;
     public WeaponData weaponData;   //Stats and effects of the weapon
     public Transform cannon;        //Position of the cannon
     public Transform crosshair;     //Position of the crosshair
@@ -15,6 +16,7 @@ public class Weapon : MonoBehaviour
 
     private void Awake()
     {
+        manager = FindObjectOfType<WeaponManager>();
         SetAudioSource(weaponData.sfxData);
 
         if (equipped)
@@ -24,23 +26,15 @@ public class Weapon : MonoBehaviour
     }
 
     //Used by the player controller to shoot the weapon
-    public RaycastHit ShootHitscan()
+    public void ShootHitscan()
     {
-        RaycastHit hitPoint;
-        
-        if (crosshair)
-            direction = (crosshair.position - cannon.position); //Making sure the direction of the shot is towards the crosshair
-        else
-            direction = Vector3.forward;
-
-        Debug.DrawRay(cannon.position, direction * weaponData.range, Color.red);
+        Debug.DrawRay(cannon.position, transform.forward * weaponData.range, Color.red);
 
         //If the shot hit something
         RaycastHit hitInfo;
-        if (Physics.Raycast(cannon.position, direction, out hitInfo, weaponData.range))
+        if (Physics.Raycast(cannon.position, transform.forward, out hitInfo, weaponData.range))
         {
-            hitPoint = hitInfo;
-
+            manager.SpawnEffects(hitInfo.point, hitInfo.normal);
             Debug.Log("Object hit : " + hitInfo.transform.name);
 
             //If the object hit is an enemy
@@ -49,10 +43,12 @@ public class Weapon : MonoBehaviour
                 hitInfo.transform.GetComponent<Enemy>().TakeDamage(weaponData.damage);  //Enemy takes damage
             }
         }
+        else
+        {
+            manager.SpawnEffects(transform.forward * weaponData.range, Vector3.zero);
+        }
 
         audio.Play();
-
-        return hitInfo;
     }
 
     public void ShootBullet()

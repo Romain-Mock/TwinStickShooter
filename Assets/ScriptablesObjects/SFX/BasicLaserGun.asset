@@ -15,4 +15,4 @@ MonoBehaviour:
   audioClip: {fileID: 8300000, guid: 81dc9d35ad42e984590e80dcc27031a5, type: 3}
   priority: 128
   volume: 0.1
-  pitch: 2
+  pitch: 1
