@@ -143,8 +143,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e55207d216504504f9077a2901d812a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  crosshair: {fileID: 4565997585239027749}
-  distanceCrosshair: 5
   moveSpeed: 5
   rotateSpeed: 6
 --- !u!114 &4565997585670522801
@@ -187,6 +185,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4565997585239027749}
   - component: {fileID: 4565997585239027750}
+  - component: {fileID: 3568870340920934317}
   m_Layer: 0
   m_Name: Crosshair
   m_TagString: Untagged
@@ -259,6 +258,18 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &3568870340920934317
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4565997585239027748}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 632c1b5fcabdcf94a8e4564a2c0cb57c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &4565997585792203159
 GameObject:
   m_ObjectHideFlags: 0
@@ -401,3 +412,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1d92cf7b69f3914ab144de00a65866c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  weaponOne: {fileID: 0}
+  weaponTwo: {fileID: 0}

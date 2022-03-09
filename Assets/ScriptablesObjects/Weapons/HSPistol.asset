@@ -17,7 +17,7 @@ MonoBehaviour:
   fireRate: 3
   range: 20
   addSpread: 0
-  sfxData: {fileID: 11400000, guid: bac2f8c589c160942b37f0b5d2270994, type: 2}
+  sfxData: {fileID: 11400000, guid: fe450fce5a53e8741ab1e1f92bab2e4d, type: 2}
   bullet: {fileID: 0}
   bulletSpeed: 100
   fireVFX: {fileID: 4268771202324332646, guid: 59f2cec0cb2c2994a8191ebff9d0ecea, type: 3}
