@@ -4,9 +4,10 @@ using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
 {
-    public float height;
     [Tooltip("Ce que la camera regarde")]
     public Transform target;
+    [Tooltip("Hauteur de la camera")]
+    public float height;
     [Tooltip("Distance entre la camera et la cible")]
     public float distance;
 

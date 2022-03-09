@@ -3,31 +3,38 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(Rigidbody), typeof(PlayerInput), typeof(Animator))]
 public class PlayerController : MonoBehaviour
 {
-    private Rigidbody rb;
-    private Weapon weapon;
+    private Rigidbody rb;   //Rigidbody of the player
     private PlayerInput playerInput;
     private PlayerInputActions playerInputAction;
     private Animator animator;
+    private WeaponManager weaponManager;
 
     Vector3 mouseWorldPos;
 
+    public enum PlayerState { Idle, OnlyMoving, OnlyAiming, MovingAndAiming };
+    PlayerState currentState;
+
     Vector2 aimInput;
 
+    Vector3 activeDirection;
+
+    [Header("Movement values")]
     private float xMovement;
     private float zMovement;
+    [Tooltip("Movement speed")]
     public float moveSpeed = 5f;
-    [Range(1, 10)]
+    [Range(1, 10), Tooltip("Rotation speed")]
     public float rotateSpeed = 6f;
-    public bool rotateSmooth;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        weapon = transform.GetComponentInChildren<Weapon>();
         playerInput = GetComponent<PlayerInput>();
         animator = GetComponent<Animator>();
+        weaponManager = GameObject.FindObjectOfType<WeaponManager>();
 
         playerInputAction = new PlayerInputActions();
         playerInputAction.Player.Enable();
@@ -35,60 +42,89 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
-        Vector2 inputVector = playerInputAction.Player.Move.ReadValue<Vector2>();   //Movement input (ZQSD / Left stick)
-        Vector3 movement = new Vector3(inputVector.x, 0, inputVector.y).normalized; //Movement normalized in 3D
+        Vector2 moveInput = playerInputAction.Player.Move.ReadValue<Vector2>();   //Movement input (ZQSD / Left stick)
+        Vector3 moveDirection = new Vector3(moveInput.x, 0, moveInput.y).normalized; //Movement normalized in 3D
 
         Vector2 aimInput = playerInputAction.Player.FireGamepad.ReadValue<Vector2>();   //Aiming input (Mouse / Right stick)
         Vector3 aimDirection = new Vector3(aimInput.x, 0, aimInput.y).normalized;   //Aiming normalized in 3D
 
-        //If the player is moving
-        if (movement != Vector3.zero)
+        currentState = GetPlayerState(moveInput, aimInput);
+
+        switch (currentState)
         {
-            //If the player is aiming while moving
-            if (aimDirection != Vector3.zero)
-            {
-                Rotate(aimDirection);  
+            case PlayerState.OnlyMoving:
 
-                float normalizedAngle = Vector3.Angle(movement, aimDirection) / 180;    //Calaculate the angle between movement and aim and normalize it from 0 to 1
+                Rotate(moveDirection);
 
+                animator.SetBool("isMoving", true);
+                animator.SetBool("isShooting", false);
+
+                rb.position += moveDirection * moveSpeed * Time.fixedDeltaTime;
+
+                break;
+
+            case PlayerState.OnlyAiming:
+
+                Rotate(aimDirection);
+
+                animator.SetBool("isMoving", false);
+                animator.SetBool("isShooting", true);
+
+                break;
+
+            case PlayerState.MovingAndAiming:
+
+                Rotate(aimDirection);
+
+                animator.SetBool("isMoving", true);
                 animator.SetBool("isShooting", true);   //Animation conditions
+
+                float normalizedAngle = Vector3.Angle(moveDirection, aimDirection) / 180;    //Calaculate the angle between movement and aim and normalize it from 0 to 1
                 animator.SetFloat("angle", normalizedAngle);
 
-                weapon.Shoot();
-                
+                rb.position += moveDirection * moveSpeed * Time.fixedDeltaTime;
+
+                break;
+
+            case PlayerState.Idle:
+
+                animator.SetBool("isMoving", false);
+                animator.SetBool("isShooting", false);
+                break;
+        }
+    }
+
+    PlayerState GetPlayerState(Vector3 movement, Vector3 aim)
+    {
+        PlayerState state;
+
+        if (movement != Vector3.zero)
+        {
+            if (aim != Vector3.zero)
+            {
+                state = PlayerState.MovingAndAiming;
             }
             else
             {
-                Rotate(movement);
-
-                animator.SetBool("isShooting", false);
-
-                weapon.StopShooting();
+                state = PlayerState.OnlyMoving;
             }
-
-            animator.SetBool("isMoving", true);
-            //Movement
-            rb.position += movement * moveSpeed * Time.fixedDeltaTime;
         }
         else
         {
-            animator.SetBool("isMoving", false);
-            //If the player is aiming without moving
-            if (aimDirection != Vector3.zero)
+            if (aim != Vector3.zero)
             {
-                Rotate(aimDirection);
+                state = PlayerState.OnlyAiming;
 
-                animator.SetBool("isShooting", true);
-
-                weapon.Shoot();
+                if (movement != Vector3.zero)
+                    state = PlayerState.MovingAndAiming;
             }
             else
             {
-                weapon.StopShooting();
-
-                animator.SetBool("isShooting", false);
+                state = PlayerState.Idle;
             }
         }
+
+        return state;
     }
 
     //Rotate the player to look at the mouse
@@ -112,9 +148,6 @@ public class PlayerController : MonoBehaviour
         if (direction != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
-
-            if (rotateSmooth)
-                targetRotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 360 * rotateSpeed * Time.fixedDeltaTime);
 
             rb.MoveRotation(targetRotation);
         }

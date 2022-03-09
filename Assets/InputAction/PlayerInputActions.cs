@@ -62,6 +62,15 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SwitchWeapon"",
+                    ""type"": ""Button"",
+                    ""id"": ""0d224de4-43ba-4fb7-bbde-28179ee30d0c"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -238,6 +247,28 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": ""Joystick"",
                     ""action"": ""FireGamepad"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e8686764-158f-4288-9531-1a8f9c091659"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""SwitchWeapon"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""3b2b3458-6d46-483d-904c-0a835ddfc4ab"",
+                    ""path"": ""<Gamepad>/buttonNorth"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""SwitchWeapon"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -829,6 +860,7 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
         m_Player_LookMouse = m_Player.FindAction("LookMouse", throwIfNotFound: true);
         m_Player_FireGamepad = m_Player.FindAction("FireGamepad", throwIfNotFound: true);
         m_Player_FireMouse = m_Player.FindAction("FireMouse", throwIfNotFound: true);
+        m_Player_SwitchWeapon = m_Player.FindAction("SwitchWeapon", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -904,6 +936,7 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_LookMouse;
     private readonly InputAction m_Player_FireGamepad;
     private readonly InputAction m_Player_FireMouse;
+    private readonly InputAction m_Player_SwitchWeapon;
     public struct PlayerActions
     {
         private @PlayerInputActions m_Wrapper;
@@ -912,6 +945,7 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
         public InputAction @LookMouse => m_Wrapper.m_Player_LookMouse;
         public InputAction @FireGamepad => m_Wrapper.m_Player_FireGamepad;
         public InputAction @FireMouse => m_Wrapper.m_Player_FireMouse;
+        public InputAction @SwitchWeapon => m_Wrapper.m_Player_SwitchWeapon;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -933,6 +967,9 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
                 @FireMouse.started -= m_Wrapper.m_PlayerActionsCallbackInterface.OnFireMouse;
                 @FireMouse.performed -= m_Wrapper.m_PlayerActionsCallbackInterface.OnFireMouse;
                 @FireMouse.canceled -= m_Wrapper.m_PlayerActionsCallbackInterface.OnFireMouse;
+                @SwitchWeapon.started -= m_Wrapper.m_PlayerActionsCallbackInterface.OnSwitchWeapon;
+                @SwitchWeapon.performed -= m_Wrapper.m_PlayerActionsCallbackInterface.OnSwitchWeapon;
+                @SwitchWeapon.canceled -= m_Wrapper.m_PlayerActionsCallbackInterface.OnSwitchWeapon;
             }
             m_Wrapper.m_PlayerActionsCallbackInterface = instance;
             if (instance != null)
@@ -949,6 +986,9 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
                 @FireMouse.started += instance.OnFireMouse;
                 @FireMouse.performed += instance.OnFireMouse;
                 @FireMouse.canceled += instance.OnFireMouse;
+                @SwitchWeapon.started += instance.OnSwitchWeapon;
+                @SwitchWeapon.performed += instance.OnSwitchWeapon;
+                @SwitchWeapon.canceled += instance.OnSwitchWeapon;
             }
         }
     }
@@ -1109,6 +1149,7 @@ public partial class @PlayerInputActions : IInputActionCollection2, IDisposable
         void OnLookMouse(InputAction.CallbackContext context);
         void OnFireGamepad(InputAction.CallbackContext context);
         void OnFireMouse(InputAction.CallbackContext context);
+        void OnSwitchWeapon(InputAction.CallbackContext context);
     }
     public interface IUIActions
     {

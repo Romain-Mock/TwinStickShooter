@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0ad3f17c8c52b74b9fe9c1aab3d6368, type: 3}
+  m_Name: HSAssault
+  m_EditorClassIdentifier: 
+  weaponType: 0
+  damage: 10
+  fireRate: 10
+  range: 20
+  addSpread: 0
+  sfxData: {fileID: 11400000, guid: bac2f8c589c160942b37f0b5d2270994, type: 2}
+  bullet: {fileID: 0}
+  bulletSpeed: 100
+  fireVFX: {fileID: 4268771202324332646, guid: 59f2cec0cb2c2994a8191ebff9d0ecea, type: 3}
+  impactVFX: {fileID: 7841751400427298183, guid: 78c1866da7405bd41b6a1ee78997de9c, type: 3}
+  trailVFX: {fileID: 8743565315153175522, guid: 190e87d717af04d4e824410b2bf4f255, type: 3}

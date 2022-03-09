@@ -2,76 +2,70 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class Weapon : MonoBehaviour
 {
-    public WeaponData stats;
+    public WeaponManager manager;
+    public WeaponData weaponData;   //Stats and effects of the weapon
+    public Transform cannon;        //Position of the cannon
+    public Transform crosshair;     //Position of the crosshair
+    public bool equipped;
 
-    LineRenderer line;
-
-    float delayBetweenShots = 0f;
-
-    IEnumerator currentCoroutine = null;
+    new AudioSource audio;
+    Vector3 direction;
 
     private void Awake()
     {
-        line = GetComponent<LineRenderer>();
+        manager = FindObjectOfType<WeaponManager>();
+        SetAudioSource(weaponData.sfxData);
 
-        SetGradient();
-
-        delayBetweenShots = 60 / stats.fireRate;
+        if (equipped)
+        {
+            crosshair = GameObject.Find("Crosshair").transform;
+        }
     }
 
-    public void Shoot()
+    //Used by the player controller to shoot the weapon
+    public void ShootHitscan()
     {
-        Debug.DrawRay(transform.position, transform.forward * stats.range, Color.green);
-        Ray ray = new Ray(transform.position, transform.forward);
+        Debug.DrawRay(cannon.position, transform.forward * weaponData.range, Color.red);
+
+        //If the shot hit something
         RaycastHit hitInfo;
-        float shotDistance = stats.range;
-
-        if (Physics.Raycast(ray, out hitInfo, stats.range))
+        if (Physics.Raycast(cannon.position, transform.forward, out hitInfo, weaponData.range))
         {
-            shotDistance = hitInfo.distance;
+            manager.SpawnEffects(hitInfo.point, hitInfo.normal);
+            Debug.Log("Object hit : " + hitInfo.transform.name);
 
+            //If the object hit is an enemy
             if (hitInfo.transform.GetComponent<Enemy>())
             {
-                hitInfo.transform.GetComponent<Enemy>().TakeDamage(stats.damage);
+                hitInfo.transform.GetComponent<Enemy>().TakeDamage(weaponData.damage);  //Enemy takes damage
             }
         }
+        else
+        {
+            manager.SpawnEffects(transform.forward * weaponData.range, Vector3.zero);
+        }
 
-        currentCoroutine = RenderLine(delayBetweenShots, shotDistance);
-        StartCoroutine(currentCoroutine);
+        audio.Play();
     }
 
-    public void StopShooting()
+    public void ShootBullet()
     {
-        if (currentCoroutine != null)
-            StopCoroutine(currentCoroutine);
+        GameObject go = Instantiate(weaponData.fireVFX, cannon.position, transform.localRotation);  //Instantiate bullet
+        go.GetComponent<Bullet>().SetSpeed(weaponData.bulletSpeed); //Set bullet speed on the bullet scrpt
+        go.transform.localRotation = transform.rotation;
     }
 
-    IEnumerator RenderLine(float delay, float distance)
+    //Set the audio source parameters of the weapon according to the audio settings of the sound
+    void SetAudioSource(SFXData data)
     {
-        line.enabled = true;
-        line.SetPosition(0, transform.position);
-        line.SetPosition(1, transform.position + transform.forward * distance);
-        yield return new WaitForSeconds(delay);
-        line.enabled = false;
-    }
+        audio = GetComponent<AudioSource>();
 
-    void SetGradient()
-    {
-        Gradient gradient = new Gradient();
-        GradientColorKey[] colorKey = new GradientColorKey[2];
-        colorKey[0].color = stats.startColor;
-        colorKey[0].time = 0f;
-        colorKey[1].color = stats.endColor;
-        colorKey[1].time = 1f;
-        GradientAlphaKey[] alphaKey = new GradientAlphaKey[2];
-        alphaKey[0].alpha = 1f;
-        alphaKey[0].time = 0f;
-        alphaKey[1].alpha = 1f;
-        alphaKey[1].time = 1f;
-        gradient.SetKeys(colorKey, alphaKey);
-
-        line.colorGradient = gradient;
+        audio.clip = data.audioClip;
+        audio.priority = data.priority;
+        audio.volume = data.volume;
+        audio.pitch = data.pitch;
     }
 }
