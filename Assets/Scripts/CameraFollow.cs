@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//Make the camera follow the target at a certain distance and height
 public class CameraFollow : MonoBehaviour
 {
     [Tooltip("Ce que la camera regarde")]
