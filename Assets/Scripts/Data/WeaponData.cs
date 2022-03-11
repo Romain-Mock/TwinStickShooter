@@ -26,4 +26,5 @@ public class WeaponData : ScriptableObject
     public GameObject fireVFX;
     public GameObject impactVFX;
     public GameObject trailVFX;
+    public GameObject lineVFX;
 }

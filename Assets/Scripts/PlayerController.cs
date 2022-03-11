@@ -32,10 +32,10 @@ public class PlayerController : MonoBehaviour
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        playerInput = GetComponent<PlayerInput>();
         animator = GetComponent<Animator>();
         weaponManager = GameObject.FindObjectOfType<WeaponManager>();
 
+        playerInput = GetComponent<PlayerInput>();
         playerInputAction = new PlayerInputActions();
         playerInputAction.Player.Enable();
     }

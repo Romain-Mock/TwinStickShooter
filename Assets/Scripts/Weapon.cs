@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 [RequireComponent(typeof(AudioSource))]
 public class Weapon : MonoBehaviour
@@ -8,31 +9,41 @@ public class Weapon : MonoBehaviour
     public WeaponManager manager;
     public WeaponData weaponData;   //Stats and effects of the weapon
     public Transform cannon;        //Position of the cannon
-    public Transform crosshair;     //Position of the crosshair
-    public bool equipped;
+
+    public bool isEquipped;
 
     new AudioSource audio;
     Vector3 direction;
+
+    public static event Action OnWeaponDropped;
+
+    //public bool IsEquipped
+    //{
+    //    get { return isEquipped; }
+    //    set
+    //    {
+    //        if (isEquipped != value)
+    //        {
+    //            isEquipped = value;
+    //            OnWeaponDropped?.Invoke();
+    //        }
+    //    }
+    //}
 
     private void Awake()
     {
         manager = FindObjectOfType<WeaponManager>();
         SetAudioSource(weaponData.sfxData);
-
-        if (equipped)
-        {
-            crosshair = GameObject.Find("Crosshair").transform;
-        }
     }
 
     //Used by the player controller to shoot the weapon
     public void ShootHitscan()
     {
-        Debug.DrawRay(cannon.position, transform.forward * weaponData.range, Color.red);
+        
 
         //If the shot hit something
         RaycastHit hitInfo;
-        if (Physics.Raycast(cannon.position, transform.forward, out hitInfo, weaponData.range))
+        if (Physics.Raycast(cannon.position, cannon.transform.forward, out hitInfo, weaponData.range))
         {
             manager.SpawnEffects(hitInfo.point, hitInfo.normal);
             Debug.Log("Object hit : " + hitInfo.transform.name);
@@ -45,7 +56,8 @@ public class Weapon : MonoBehaviour
         }
         else
         {
-            manager.SpawnEffects(transform.forward * weaponData.range, Vector3.zero);
+            Debug.DrawRay(cannon.position, cannon.transform.forward * weaponData.range, Color.red);
+            manager.SpawnEffects(cannon.position + cannon.transform.forward * weaponData.range, Vector3.zero);
         }
 
         audio.Play();

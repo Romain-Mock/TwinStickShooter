@@ -2,28 +2,37 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System;
 
 //Manages weapons
 public class WeaponManager : MonoBehaviour
 {
-    List<Weapon> allWeapons;    //All the weapons in the scene
+    private PickUp pickUp;
+    public List<Weapon> allWeapons;    //All the weapons in the scene
     Transform weaponSlotOne;    //First weapon anchor
     Transform weaponSlotTwo;    //Second weapon anchor
     int activeWeapon = 1;       //Weapon currently equipped
 
     public GameObject weaponOne;    //First weapon, child of weaponSlotOne
     public GameObject weaponTwo;    //Second weapon, child of weaponSlotTwo
-    Transform crosshair;
 
     float lastShootTime = 0;    //Last time the player shot (used to calculate when next he can shoot
 
     PlayerInputActions playerInputAction;
 
+    void OnEnable() => Weapon.OnWeaponDropped += UpdateWeaponsList;
+
+    void OnDisable() => Weapon.OnWeaponDropped -= UpdateWeaponsList;
+
     void Awake()
     {
+        pickUp = GetComponent<PickUp>();
         playerInputAction = new PlayerInputActions();
         playerInputAction.Player.Enable();
         playerInputAction.Player.SwitchWeapon.performed += SwitchWeapon;
+        playerInputAction.Player.PickUp.performed += ReplaceWeapon;
+
+        allWeapons = new List<Weapon>();
     }
 
     //Set position on the player and get all weapons
@@ -31,15 +40,15 @@ public class WeaponManager : MonoBehaviour
     {
         InstantiateStartingWeapons();
 
-        //UpdateWeaponsList();   //Get all weapons in the scene
+        UpdateWeaponsList();   //Get all weapons in the scene
 
-        //crosshair = GameManager.instance.GetChildByName(transform, "Crosshair").transform;
         weaponSlotOne = transform.Find("Slot1");
         weaponSlotTwo = transform.Find("Slot2");
     }
 
     private void Update()
     {
+        Debug.Log(allWeapons.Count);
         Weapon currentWeapon = GetActiveWeapon().GetComponent<Weapon>();
 
         if (playerInputAction.Player.FireGamepad.ReadValue<Vector2>() != Vector2.zero && Time.time >= lastShootTime)
@@ -50,43 +59,46 @@ public class WeaponManager : MonoBehaviour
         }
     }
 
-    //Update la liste des armes de la scene
+    //Update la liste des armes disponibles de la scene (celles qui ne sont pas tenues par le joueur ou les ennemis
     private void UpdateWeaponsList()
     {
+        Debug.Log("Updating weapon list");
         foreach (Weapon go in GameObject.FindObjectsOfType<Weapon>())
         {
-            if (!go.equipped)           //Si l'arme est équippée on l'ajoute à la liste
+            if (!go.isEquipped)           //Si l'arme est n'est pas équippée on l'ajoute à la liste
+            {
                 allWeapons.Add(go);
+            }
             else
+            {
                 allWeapons.Remove(go);  //Sinon on la retire de la liste
+            }
         }
     }
 
     //Set the given weapon as active weapon, setting its position, rotation and parent to the anchor
-    public void ReplaceWeapon(Weapon newWeapon)
+    public void ReplaceWeapon(InputAction.CallbackContext context)
     {
-        Transform currentWeapon = GetActiveWeapon();    
+        Weapon newWeapon = pickUp.closestObject.GetComponent<Weapon>();
+        Weapon currentWeapon = GetActiveWeapon().GetComponent<Weapon>();
 
-        ReleaseActiveWeapon();  //Set active weapon's position, rotation and parent to 0
+        DropWeapon(currentWeapon);  //Set active weapon's position, rotation and parent to 0
 
         //Set new weapon's position, rotation and parent to this
         newWeapon.transform.position = currentWeapon.transform.position;
         newWeapon.transform.rotation = currentWeapon.transform.rotation;
         newWeapon.transform.SetParent(currentWeapon.transform);
-        newWeapon.equipped = true;  //Set new weapon as equipped
-
-        newWeapon.crosshair = crosshair;
+        newWeapon.isEquipped = true;  //Set new weapon as equipped
 
         UpdateWeaponsList();    //Update unequipped weapon list
     }
     
-    //Unparent active weapon
-    void ReleaseActiveWeapon()
+    //Unparent given weapon
+    void DropWeapon(Weapon weapon)
     {
-        GetActiveWeapon().SetParent(null);
-        GetActiveWeapon().position = Vector3.zero;
-        GetActiveWeapon().rotation = Quaternion.identity;
-        GetActiveWeapon().GetComponent<Weapon>().equipped = false;
+        weapon.transform.SetParent(null);
+        weapon.transform.GetComponent<Weapon>().isEquipped = false;
+        UpdateWeaponsList();
     }
 
     //Switch between both equipped weapons
@@ -122,9 +134,9 @@ public class WeaponManager : MonoBehaviour
     void InstantiateStartingWeapons()
     {
         GameObject go1 = Instantiate(weaponOne, transform.position, transform.rotation, transform.Find("Slot1"));
-        go1.GetComponent<Weapon>().equipped = true;
+        go1.GetComponent<Weapon>().isEquipped = true;
         GameObject go2 = Instantiate(weaponTwo, transform.position, transform.rotation, transform.Find("Slot2"));
-        go2.GetComponent<Weapon>().equipped = true;
+        go2.GetComponent<Weapon>().isEquipped = true;
         transform.Find("Slot2").gameObject.SetActive(false);
     }
 
@@ -149,8 +161,12 @@ public class WeaponManager : MonoBehaviour
     {
         Weapon weap = GetActiveWeapon().GetComponent<Weapon>();
         GameObject vfx = Instantiate(weap.weaponData.fireVFX, weap.cannon.position, transform.rotation);  //Instnatiate the particules effets on the cannon
-        TrailRenderer trail = Instantiate(weap.weaponData.trailVFX, weap.cannon.position, Quaternion.identity).GetComponent<TrailRenderer>(); //Instantiate the trail particules along the raycast
         Destroy(vfx, 1f); //Destroying the cannon VFX
+        //GameObject line = Instantiate(weap.weaponData.lineVFX, weap.cannon.position, transform.rotation);
+        //LineRenderer lineR = line.GetComponent<LineRenderer>();
+        //lineR.SetPosition(0, weap.cannon.transform.position);
+        //lineR.SetPosition(1, hitPoint);
+        TrailRenderer trail = Instantiate(weap.weaponData.trailVFX, weap.cannon.position, Quaternion.identity).GetComponent<TrailRenderer>(); //Instantiate the trail particules along the raycast
         StartCoroutine(MoveTrail(weap.weaponData, trail, hitPoint, hitNormal));
     }
 

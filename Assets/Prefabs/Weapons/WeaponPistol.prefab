@@ -49,8 +49,7 @@ MonoBehaviour:
   manager: {fileID: 0}
   weaponData: {fileID: 11400000, guid: ede633b8ec211cf4ebe51cd29e21d443, type: 2}
   cannon: {fileID: 3294379772694653281}
-  crosshair: {fileID: 0}
-  equipped: 0
+  isEquipped: 0
 --- !u!82 &3127294853216096449
 AudioSource:
   m_ObjectHideFlags: 0
@@ -188,6 +187,7 @@ GameObject:
   - component: {fileID: 4688353269837176740}
   - component: {fileID: 8556764388715958273}
   - component: {fileID: 5862363632212403403}
+  - component: {fileID: 5577804289754726730}
   m_Layer: 0
   m_Name: pistol2
   m_TagString: Untagged
@@ -258,3 +258,15 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &5577804289754726730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5358070631577404702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a48342eb8263fa4583d60c34891e83b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

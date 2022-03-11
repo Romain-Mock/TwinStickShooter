@@ -75,7 +75,7 @@ GameObject:
   - component: {fileID: 4565997585670522801}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -376,6 +376,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4565997586428926407}
   - component: {fileID: 1638939564455590889}
+  - component: {fileID: 7480866350077455845}
   m_Layer: 0
   m_Name: Weapon Anchor
   m_TagString: Untagged
@@ -412,5 +413,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1d92cf7b69f3914ab144de00a65866c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  allWeapons: []
   weaponOne: {fileID: 0}
   weaponTwo: {fileID: 0}
+--- !u!114 &7480866350077455845
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4565997586428926406}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44fc5963518e8294cb8026f19f73a7de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  radius: 3
+  pickUpSprite: {fileID: 7369064336598219110, guid: f7734767d8d7e7b41908a19b1dbfc1a7, type: 3}
