@@ -5,6 +5,7 @@ using UnityEngine;
 [CreateAssetMenu()]
 public class WeaponData : ScriptableObject
 {
+    new public string name;
     public enum WeaponType { Hitscan, Instantiate};
     [Header("Weapon type")]
     public WeaponType weaponType;
@@ -14,6 +15,7 @@ public class WeaponData : ScriptableObject
     public float fireRate;
     public float range;
     public bool addSpread;
+    public bool dualWielding;
 
     [Header("SFX")]
     public SFXData sfxData;
@@ -26,5 +28,4 @@ public class WeaponData : ScriptableObject
     public GameObject fireVFX;
     public GameObject impactVFX;
     public GameObject trailVFX;
-    public GameObject lineVFX;
 }

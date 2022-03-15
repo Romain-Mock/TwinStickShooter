@@ -10,13 +10,6 @@ public class PickUp : MonoBehaviour
     public Transform closestObject;
     private WeaponManager manager;
     public List<Weapon> weaponInRange;
-    private float maxDistance;
-
-    //Set la max distance au radius
-    //Récupère la liste de toutes les armes non équipées
-    //Loop through la liste et compare la distance entre l'objet et ce transform
-    //Si cette distance est plus petite que la distance max, stocke l'objet dans closestObject
-    //A la fin de la boucle, si la distance entre l'objet le plus proche et ce tranform est inférieure au radius
 
     void Start()
     {
@@ -26,9 +19,8 @@ public class PickUp : MonoBehaviour
 
     void Update()
     {
-        maxDistance = radius;
-
-        closestObject = GetClosestWeapon(manager.allWeapons);
+        if (weaponInRange.Count > 0)
+            closestObject = GetClosestWeapon(manager.unequippedWeapons);
     }
 
     Transform GetClosestWeapon(List<Weapon> weapons)
@@ -38,7 +30,6 @@ public class PickUp : MonoBehaviour
         Vector3 currentPosition = transform.position;
         foreach (Weapon potentialTarget in weapons)
         {
-            Debug.Log(potentialTarget.name);
             Vector3 directionToTarget = potentialTarget.transform.position - currentPosition;
             float dSqrToTarget = directionToTarget.sqrMagnitude;
             if (dSqrToTarget < closestDistanceSqr)
@@ -48,7 +39,10 @@ public class PickUp : MonoBehaviour
             }
         }
 
-        return closestObject;
+        if (Vector3.Distance(transform.position, closestObject.position) < radius)
+            return closestObject;
+        else
+            return null;
     }
 
     void OnDrawGizmos()

@@ -6,24 +6,17 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody), typeof(PlayerInput), typeof(Animator))]
 public class PlayerController : MonoBehaviour
 {
-    private Rigidbody rb;   //Rigidbody of the player
-    private PlayerInput playerInput;
-    private PlayerInputActions playerInputAction;
-    private Animator animator;
-    private WeaponManager weaponManager;
+    private Rigidbody _rb;   //Rigidbody of the player
+    private PlayerInput _playerInput;
+    private PlayerInputActions _playerInputAction;
+    private Animator _animator;
+    private Roll _roll;
 
     Vector3 mouseWorldPos;
 
-    public enum PlayerState { Idle, OnlyMoving, OnlyAiming, MovingAndAiming };
+    public enum PlayerState { Idle, OnlyMoving, OnlyAiming, MovingAndAiming, Rolling };
     PlayerState currentState;
 
-    Vector2 aimInput;
-
-    Vector3 activeDirection;
-
-    [Header("Movement values")]
-    private float xMovement;
-    private float zMovement;
     [Tooltip("Movement speed")]
     public float moveSpeed = 5f;
     [Range(1, 10), Tooltip("Rotation speed")]
@@ -31,35 +24,37 @@ public class PlayerController : MonoBehaviour
 
     void Awake()
     {
-        rb = GetComponent<Rigidbody>();
-        animator = GetComponent<Animator>();
-        weaponManager = GameObject.FindObjectOfType<WeaponManager>();
+        _rb = GetComponent<Rigidbody>();
+        _animator = GetComponent<Animator>();
+        _roll = GetComponent<Roll>();
 
-        playerInput = GetComponent<PlayerInput>();
-        playerInputAction = new PlayerInputActions();
-        playerInputAction.Player.Enable();
+        _playerInput = GetComponent<PlayerInput>();
+        _playerInputAction = new PlayerInputActions();
+        _playerInputAction.Player.Enable();
+        _playerInputAction.Player.Roll.started += OnRolling;
     }
 
     void FixedUpdate()
     {
-        Vector2 moveInput = playerInputAction.Player.Move.ReadValue<Vector2>();   //Movement input (ZQSD / Left stick)
+        Vector2 moveInput = _playerInputAction.Player.Move.ReadValue<Vector2>();   //Movement input (ZQSD / Left stick)
         Vector3 moveDirection = new Vector3(moveInput.x, 0, moveInput.y).normalized; //Movement normalized in 3D
 
-        Vector2 aimInput = playerInputAction.Player.FireGamepad.ReadValue<Vector2>();   //Aiming input (Mouse / Right stick)
+        Vector2 aimInput = _playerInputAction.Player.FireGamepad.ReadValue<Vector2>();   //Aiming input (Mouse / Right stick)
         Vector3 aimDirection = new Vector3(aimInput.x, 0, aimInput.y).normalized;   //Aiming normalized in 3D
 
         currentState = GetPlayerState(moveInput, aimInput);
+        Debug.Log(currentState.ToString());
 
         switch (currentState)
         {
             case PlayerState.OnlyMoving:
 
                 Rotate(moveDirection);
+                _rb.position += moveDirection * moveSpeed * Time.fixedDeltaTime;
 
-                animator.SetBool("isMoving", true);
-                animator.SetBool("isShooting", false);
+                _animator.SetBool("isMoving", true);
+                _animator.SetBool("isShooting", false);
 
-                rb.position += moveDirection * moveSpeed * Time.fixedDeltaTime;
 
                 break;
 
@@ -67,8 +62,8 @@ public class PlayerController : MonoBehaviour
 
                 Rotate(aimDirection);
 
-                animator.SetBool("isMoving", false);
-                animator.SetBool("isShooting", true);
+                _animator.SetBool("isMoving", false);
+                _animator.SetBool("isShooting", true);
 
                 break;
 
@@ -76,20 +71,26 @@ public class PlayerController : MonoBehaviour
 
                 Rotate(aimDirection);
 
-                animator.SetBool("isMoving", true);
-                animator.SetBool("isShooting", true);   //Animation conditions
+                _animator.SetBool("isMoving", true);
+                _animator.SetBool("isShooting", true);   //Animation conditions
 
                 float normalizedAngle = Vector3.Angle(moveDirection, aimDirection) / 180;    //Calaculate the angle between movement and aim and normalize it from 0 to 1
-                animator.SetFloat("angle", normalizedAngle);
+                _animator.SetFloat("angle", normalizedAngle);
 
-                rb.position += moveDirection * moveSpeed * Time.fixedDeltaTime;
+                _rb.position += moveDirection * moveSpeed * Time.fixedDeltaTime;
 
                 break;
 
             case PlayerState.Idle:
 
-                animator.SetBool("isMoving", false);
-                animator.SetBool("isShooting", false);
+                _animator.SetBool("isMoving", false);
+                _animator.SetBool("isShooting", false);
+                break;
+
+            case PlayerState.Rolling:
+
+                _rb.AddForce(moveDirection, ForceMode.Impulse);
+
                 break;
         }
     }
@@ -123,6 +124,10 @@ public class PlayerController : MonoBehaviour
                 state = PlayerState.Idle;
             }
         }
+        if (_roll.IsRolling)
+            state = PlayerState.Rolling;
+        else
+            state = PlayerState.Idle;
 
         return state;
     }
@@ -130,7 +135,7 @@ public class PlayerController : MonoBehaviour
     //Rotate the player to look at the mouse
     public void LookMouse(InputAction.CallbackContext context)
     {
-        Ray mouseRay = Camera.main.ScreenPointToRay(playerInputAction.Player.LookMouse.ReadValue<Vector2>());   //Tranform the mouse pos in screen value to world value
+        Ray mouseRay = Camera.main.ScreenPointToRay(_playerInputAction.Player.LookMouse.ReadValue<Vector2>());   //Tranform the mouse pos in screen value to world value
 
         Plane p = new Plane(Vector3.up, Vector3.zero);  //Create a plane for the mouse raycast to hit
 
@@ -149,7 +154,12 @@ public class PlayerController : MonoBehaviour
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
 
-            rb.MoveRotation(targetRotation);
+            _rb.MoveRotation(targetRotation);
         }
+    }
+
+    void OnRolling(InputAction.CallbackContext context)
+    {
+        _animator.SetTrigger("Roll");
     }
 }
