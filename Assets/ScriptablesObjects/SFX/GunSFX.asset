@@ -12,7 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42b691f1997b79f41a87cf451d9e7153, type: 3}
   m_Name: GunSFX
   m_EditorClassIdentifier: 
-  audioClip: {fileID: 8300000, guid: 9625655ecd757db44ad91183e3eeff1f, type: 3}
+  fireClip: {fileID: 8300000, guid: 9625655ecd757db44ad91183e3eeff1f, type: 3}
+  reloadClip: {fileID: 8300000, guid: 5f95b21a1a4314749bbf2f452522ca17, type: 3}
+  emptyMagClip: {fileID: 8300000, guid: ce4b02a2bccbab84090b2b1b4f35dd2c, type: 3}
   priority: 128
   volume: 0.1
   pitch: 1

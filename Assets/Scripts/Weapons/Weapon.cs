@@ -8,26 +8,61 @@ public abstract class Weapon : MonoBehaviour
 {
     protected WeaponManager manager;
     public WeaponData weaponData;   //Stats and effects of the weapon
+    public int currentAmmos;
+    public int ammosInMag;
+
+    private bool _isReloading;
+    public bool IsReloading { get { return _isReloading; } }
+    public bool OutOfAmmo { get { return ammosInMag + currentAmmos == 0; } }
 
     LayerMask layer;
 
-    public bool isEquipped;
+    private bool _isEquipped;
+    public bool IsEquipped { get { return _isEquipped; } set { _isEquipped = value; } }
 
     private AudioSource audioSource;
     Vector3 direction;
+
+    public static event Action<float> OnReload;
 
     private void Awake()
     {
         manager = FindObjectOfType<WeaponManager>();
         audioSource = GetComponent<AudioSource>();
         SetAudioSource(weaponData.sfxData);
+
+        currentAmmos = weaponData.magazineCapacity;
+        ammosInMag = weaponData.magazineCapacity;
     }
 
     //Used by the player controller to shoot the weapon
     public virtual void Shoot()
     {
-        if (audioSource != null)
-            audioSource.Play();
+        if (ammosInMag == 0)
+        {
+            if (currentAmmos > 0)
+            {
+                StartCoroutine(Reload(weaponData.reloadTime));
+
+                if (currentAmmos >= weaponData.magazineCapacity)
+                {
+                    currentAmmos -= weaponData.magazineCapacity;
+                    ammosInMag += weaponData.magazineCapacity;
+                }
+                else
+                {
+                    ammosInMag += currentAmmos;
+                    currentAmmos -= currentAmmos;
+                }
+            }
+        }
+        else
+        {
+            ammosInMag--;
+
+            if (audioSource != null)
+                PlaySound(weaponData.sfxData.fireClip);
+        }
     }
 
     public virtual Vector3 GetDirection(Transform c)
@@ -38,10 +73,15 @@ public abstract class Weapon : MonoBehaviour
     //Set the audio source parameters of the weapon according to the audio settings of the sound
     void SetAudioSource(SFXData data)
     {
-        audioSource.clip = data.audioClip;
         audioSource.priority = data.priority;
         audioSource.volume = data.volume;
         audioSource.pitch = data.pitch;
+    }
+
+    public void PlaySound(AudioClip clip)
+    {
+        audioSource.clip = clip;
+        audioSource.Play();
     }
 
     //Spawn the vfx
@@ -84,5 +124,14 @@ public abstract class Weapon : MonoBehaviour
         }
 
         Destroy(trail.gameObject, trail.time);  //Destroy object upon arriving
+    }
+
+    IEnumerator Reload(float reloadTime)
+    {
+        OnReload?.Invoke(weaponData.reloadTime);
+        _isReloading = true;
+        PlaySound(weaponData.sfxData.reloadClip);
+        yield return new WaitForSecondsRealtime(reloadTime);
+        _isReloading = false;
     }
 }

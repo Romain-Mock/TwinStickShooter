@@ -14,6 +14,8 @@ public class DualWeapon : Weapon
 
     IEnumerator DualShoot()
     {
+        base.Shoot();
+
         foreach (Transform c in cannons)
         {
             Vector3 direction = GetDirection(c);
@@ -38,8 +40,8 @@ public class DualWeapon : Weapon
             }
 
             MuzzleEffect(weaponData, c.position);
-            base.Shoot();
+                
             yield return new WaitForSeconds(0.5f);
-        }
+        }   
     }
 }

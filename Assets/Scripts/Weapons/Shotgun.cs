@@ -10,6 +10,8 @@ public class Shotgun : Weapon
 
     public override void Shoot()
     {
+        base.Shoot();
+
         for (int i = 0; i < nbShards; i++)
         {
             Vector3 direction = GetDirection(cannon) * weaponData.range;
@@ -31,7 +33,6 @@ public class Shotgun : Weapon
         }
 
         MuzzleEffect(weaponData, cannon.position);
-        base.Shoot();
     }
 
     public override Vector3 GetDirection(Transform c)

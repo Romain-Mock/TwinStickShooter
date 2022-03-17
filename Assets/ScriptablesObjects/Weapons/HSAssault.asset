@@ -17,11 +17,11 @@ MonoBehaviour:
   damage: 10
   fireRate: 10
   range: 20
-  addSpread: 0
+  magazineCapacity: 15
+  reloadTime: 2
   sfxData: {fileID: 11400000, guid: bac2f8c589c160942b37f0b5d2270994, type: 2}
   bullet: {fileID: 0}
   bulletSpeed: 100
   fireVFX: {fileID: 4268771202324332646, guid: 59f2cec0cb2c2994a8191ebff9d0ecea, type: 3}
   impactVFX: {fileID: 7841751400427298183, guid: 78c1866da7405bd41b6a1ee78997de9c, type: 3}
   trailVFX: {fileID: 8743565315153175522, guid: 190e87d717af04d4e824410b2bf4f255, type: 3}
-  lineVFX: {fileID: 6678965140110109753, guid: 5947449339f4dd446a05c8722596a31c, type: 3}

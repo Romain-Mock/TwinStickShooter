@@ -4,58 +4,94 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System;
 
-//Manages weapons
 public class WeaponManager : MonoBehaviour
 {
-    private PickUp pickUp;
-    public List<Weapon> unequippedWeapons;    //All the weapons in the scene
-    Transform weaponSlotOne;    //First weapon anchor
-    Transform weaponSlotTwo;    //Second weapon anchor
-    int activeWeapon = 1;       //Weapon currently equipped
-    public Weapon currentWeapon;
-    private GameObject sceneWeaponHolder;
+    //Inputs
+    PlayerInputActions _playerInput;            //Player input
+    
+    //Pick up weapons
+    private PickUp _pickUp;                     //Script that returns closest weapon to pick up
+    private List<Weapon> _unequippedWeapons;    //All the unequipped weapons in the scene
+    private GameObject _sceneWeaponHolder;      //Gameobject that contains all unequipped weapons
+    
+    //Equipped weapons
+    [SerializeField]
+    private GameObject[] _startingWeapons;
+    [SerializeField]
+    private Transform _weaponSlotOne;           //First weapon anchor
+    [SerializeField]
+    private Transform _weaponSlotTwo;           //Second weapon anchor
+    private int _activeWeapon = 1;              //Weapon currently equipped
+    private Weapon _currentWeapon;              //The weapon that is activated
 
-    public GameObject weaponOne;    //First weapon, child of weaponSlotOne
-    public GameObject weaponTwo;    //Second weapon, child of weaponSlotTwo
+    private float _lastShootTime = 0;           //Last time the player shot (used to calculate when next he can shoot
+    private bool _isSwitching;
+    [SerializeField]
+    private float switchSpeed;
 
-    float lastShootTime = 0;    //Last time the player shot (used to calculate when next he can shoot
+    //Events
+    public static event Action<int, int> OnWeaponUpdateAmmo;    //Update ammo count to display to canvas
 
-    PlayerInputActions playerInputAction;
+    //Getters and setters
+    public List<Weapon> UnequippedWeapons { get { return _unequippedWeapons; } }
+
+    //Register and un register input events
+    private void OnEnable()
+    {
+        _playerInput.Player.SwitchWeapon.performed += SwitchWeapon;
+        _playerInput.Player.PickUp.performed += ReplaceWeapon;
+    }
+
+    private void OnDisable()
+    {
+        _playerInput.Player.SwitchWeapon.performed -= SwitchWeapon;
+        _playerInput.Player.PickUp.performed -= ReplaceWeapon;
+    }
 
     void Awake()
     {
-        pickUp = GetComponent<PickUp>();
-        playerInputAction = new PlayerInputActions();
-        playerInputAction.Player.Enable();
-        playerInputAction.Player.SwitchWeapon.performed += SwitchWeapon;
-        playerInputAction.Player.PickUp.performed += ReplaceWeapon;
+        _pickUp = GetComponent<PickUp>();
+        _playerInput = new PlayerInputActions();
+        _playerInput.Player.Enable();
 
-        unequippedWeapons = new List<Weapon>();
+        _unequippedWeapons = new List<Weapon>();
     }
 
     //Set position on the player and get all weapons
     void Start()
     {
-        if (!sceneWeaponHolder)
-            sceneWeaponHolder = new GameObject("Weapons");
+        //If it doesn't exist already, create a gameobject to store all the weapons in the scene
+        _sceneWeaponHolder = GameObject.Find("Weapons");
+        if (!_sceneWeaponHolder)
+            _sceneWeaponHolder = new GameObject("Weapons");
 
-        InstantiateStartingWeapons();
+        InstantiateStartingWeapons();   //Instantiate starting weapons and equip them to the player
 
-        UpdateWeaponsList();   //Get all weapons in the scene
-
-        weaponSlotOne = transform.Find("Slot1");
-        weaponSlotTwo = transform.Find("Slot2");
+        UpdateWeaponsList();   //Put all unequipped weapons in the scene in a list
     }
 
     private void Update()
     {
-        currentWeapon = GetActiveWeapon().GetChild(0).GetComponent<Weapon>();
+        _currentWeapon = GetActiveWeapon().GetChild(0).GetComponent<Weapon>();
 
-        if (playerInputAction.Player.FireGamepad.ReadValue<Vector2>() != Vector2.zero && Time.time >= lastShootTime)
+        //Shoot input
+        if (_playerInput.Player.FireGamepad.ReadValue<Vector2>() != Vector2.zero)
         {
-            //Shoot periodically according to the fire rate
-            lastShootTime = Time.time + 1f / currentWeapon.weaponData.fireRate;
-            Shoot();
+            //If 
+            if (Time.time >= _lastShootTime && !_currentWeapon.IsReloading && !_isSwitching)
+            {
+                if (!_currentWeapon.OutOfAmmo)
+                {
+                    //Shoot periodically according to the fire rate
+                    _lastShootTime = Time.time + 1f / _currentWeapon.weaponData.fireRate;
+                    Shoot();
+                    OnWeaponUpdateAmmo?.Invoke(_currentWeapon.currentAmmos, _currentWeapon.ammosInMag);
+                }
+                else
+                {
+                    _currentWeapon.PlaySound(_currentWeapon.weaponData.sfxData.emptyMagClip);
+                }
+            }
         }
     }
 
@@ -65,14 +101,14 @@ public class WeaponManager : MonoBehaviour
         Debug.Log("Updating weapon list");
         foreach (Weapon go in GameObject.FindObjectsOfType<Weapon>())
         {
-            if (!go.isEquipped && !unequippedWeapons.Contains(go))           //Si l'arme est n'est pas équippée on l'ajoute à la liste
+            if (!go.IsEquipped && !_unequippedWeapons.Contains(go))           //Si l'arme est n'est pas équippée on l'ajoute à la liste
             {
-                unequippedWeapons.Add(go);
-                go.transform.parent = sceneWeaponHolder.transform;
+                _unequippedWeapons.Add(go);
+                go.transform.parent = _sceneWeaponHolder.transform;
             }
-            else if (go.isEquipped)
+            else if (go.IsEquipped)
             {
-                unequippedWeapons.Remove(go);  //Sinon on la retire de la liste
+                _unequippedWeapons.Remove(go);  //Sinon on la retire de la liste
             }
         }
     }
@@ -80,32 +116,44 @@ public class WeaponManager : MonoBehaviour
     //Set the given weapon as active weapon, setting its position, rotation and parent to the anchor
     public void ReplaceWeapon(InputAction.CallbackContext context)
     {
-        Weapon newWeapon = pickUp.closestObject.GetComponent<Weapon>();
+        Weapon newWeapon;
 
-        if (currentWeapon)
-            DropWeapon(currentWeapon);  //Set active weapon's position, rotation and parent to 0
+        if (_pickUp.ClosestObject != null)
+        {
+            newWeapon = _pickUp.ClosestObject.GetComponent<Weapon>();
 
-        PickUpWeapon(newWeapon);
+            if (_currentWeapon)
+                DropWeapon(_currentWeapon);  //Set active weapon's position, rotation and parent to 0
 
-        UpdateWeaponsList();    //Update unequipped weapon list
+            PickUpWeapon(newWeapon);
+
+            UpdateWeaponsList();    //Update unequipped weapon list
+        }
+
+        OnWeaponUpdateAmmo?.Invoke(_currentWeapon.currentAmmos, _currentWeapon.ammosInMag);
     }
 
     void PickUpWeapon(Weapon newWeapon)
     {
         Debug.Log("Pick weapon : " + newWeapon.name);
+
+        newWeapon.GetComponent<Rigidbody>().isKinematic = true;
         //Set new weapon's position, rotation and parent to this
         newWeapon.transform.position = GetActiveWeapon().transform.position;
         newWeapon.transform.rotation = GetActiveWeapon().transform.rotation;
         newWeapon.transform.SetParent(GetActiveWeapon().transform);
-        newWeapon.isEquipped = true;  //Set new weapon as equipped
+        newWeapon.IsEquipped = true;  //Set new weapon as equipped
     }
     
     //Unparent given weapon
     void DropWeapon(Weapon weapon)
     {
         Debug.Log("Drop weapon : " + weapon.name);
+
         weapon.transform.SetParent(null);
-        weapon.transform.GetComponent<Weapon>().isEquipped = false;
+        weapon.transform.GetComponent<Weapon>().IsEquipped = false;
+        weapon.GetComponent<Rigidbody>().isKinematic = false;
+        weapon.GetComponent<Rigidbody>().AddForce(transform.forward * 7, ForceMode.Impulse);
         UpdateWeaponsList();
     }
 
@@ -114,51 +162,67 @@ public class WeaponManager : MonoBehaviour
     {
         Debug.Log("Weapon switch");
 
+        StartCoroutine(SwitchWeapons());
+
+        OnWeaponUpdateAmmo?.Invoke(_currentWeapon.currentAmmos, _currentWeapon.ammosInMag);
+    }
+
+    IEnumerator SwitchWeapons()
+    {
         //De activate the active weapon and activate the other
-        if (activeWeapon == 1)
+        if (_activeWeapon == 1)
         {
-            weaponSlotOne.gameObject.SetActive(false);
-            weaponSlotTwo.gameObject.SetActive(true);
-            activeWeapon = 2;
+            _weaponSlotOne.gameObject.SetActive(false);
+            _weaponSlotTwo.gameObject.SetActive(true);
+            _activeWeapon = 2;
         }
         else
         {
-            weaponSlotOne.gameObject.SetActive(true);
-            weaponSlotTwo.gameObject.SetActive(false);
-            activeWeapon = 1;
+            _weaponSlotOne.gameObject.SetActive(true);
+            _weaponSlotTwo.gameObject.SetActive(false);
+            _activeWeapon = 1;
         }
+
+        _isSwitching = true;
+
+        GetComponent<AudioSource>().Play();
+
+        yield return new WaitForSeconds(switchSpeed);
+
+        _isSwitching = false;
     }
 
     //Return the gameobject of the active weapon
     public Transform GetActiveWeapon()
     {
-        if (activeWeapon == 1)
-            return weaponSlotOne;
+        if (_activeWeapon == 1)
+            return _weaponSlotOne;
         else
-            return weaponSlotTwo;
+            return _weaponSlotTwo;
     }
 
     //Instantiate starting weapons in their slots and de activate the second one
     void InstantiateStartingWeapons()
     {
-        GameObject go1 = Instantiate(weaponOne, transform.position, transform.rotation, transform.Find("Slot1"));
-        go1.GetComponent<Weapon>().isEquipped = true;
-        go1.name = "Starting Weapon 1";
-        GameObject go2 = Instantiate(weaponTwo, transform.position, transform.rotation, transform.Find("Slot2"));
-        go2.GetComponent<Weapon>().isEquipped = true;
-        go2.name = "Starting Weapon 2";
-        transform.Find("Slot2").gameObject.SetActive(false);
+        GameObject weapon1 = Instantiate(_startingWeapons[0], transform.position, transform.rotation, _weaponSlotOne);
+        weapon1.GetComponent<Weapon>().IsEquipped = true;
+        weapon1.GetComponent<Rigidbody>().isKinematic = true;
+        weapon1.name = "Starting Weapon 1";
+
+        GameObject weapon2 = Instantiate(_startingWeapons[1], transform.position, transform.rotation, _weaponSlotTwo);
+        weapon2.GetComponent<Weapon>().IsEquipped = true;
+        weapon2.GetComponent<Rigidbody>().isKinematic = true;
+        weapon2.name = "Starting Weapon 2";
+        _weaponSlotTwo.gameObject.SetActive(false);
     }
 
     //Get the active weapon and shoot
     public void Shoot()
     {
         //If the weapon is hitscan 
-        if (currentWeapon.weaponData.weaponType == WeaponData.WeaponType.Hitscan)
+        if (_currentWeapon.weaponData.weaponType == WeaponData.WeaponType.Hitscan)
         {
-            currentWeapon.Shoot();
+            _currentWeapon.Shoot();
         }
     }
-
-    
 }

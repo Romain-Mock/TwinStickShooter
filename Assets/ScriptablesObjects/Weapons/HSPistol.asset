@@ -17,8 +17,8 @@ MonoBehaviour:
   damage: 10
   fireRate: 3
   range: 20
-  addSpread: 0
-  dualWielding: 0
+  magazineCapacity: 12
+  reloadTime: 1
   sfxData: {fileID: 11400000, guid: fe450fce5a53e8741ab1e1f92bab2e4d, type: 2}
   bullet: {fileID: 0}
   bulletSpeed: 100

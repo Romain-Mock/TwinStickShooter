@@ -4,30 +4,36 @@ using UnityEngine;
 
 public class PickUp : MonoBehaviour
 {
-    public float radius = 3f;
-    public GameObject pickUpSprite;
-    private GameObject instance;
-    public Transform closestObject;
-    private WeaponManager manager;
-    public List<Weapon> weaponInRange;
+    [SerializeField]
+    private float _radius = 3f;          //Radius for the closest object
+    private GameObject _pickUpSprite;   //Sprite to intantiate over closest weapon
+    private Transform _closestObject;   //Closest weapon to pick up
+    private WeaponManager _manager;     //Reference to the weapon manager
+
+    //Getters and setters
+    public Transform ClosestObject { get { return _closestObject; } }
 
     void Start()
     {
-        manager = GetComponent<WeaponManager>();
-        weaponInRange = new List<Weapon>();
+        _manager = GetComponent<WeaponManager>();
     }
 
     void Update()
-    {
-        if (weaponInRange.Count > 0)
-            closestObject = GetClosestWeapon(manager.unequippedWeapons);
+    {   //If there are at least 1 weapon that can be picked up, return the closest weapon
+        if (_manager.UnequippedWeapons.Count > 0)
+            _closestObject = GetClosestWeapon(_manager.UnequippedWeapons);
     }
 
+    //Return the closest weapon within the list of all the weapons that can be picked up
     Transform GetClosestWeapon(List<Weapon> weapons)
     {
-        Transform closestObject = null;
+        Transform closestWeapon = null;     //Initialize the closest weapon to null
         float closestDistanceSqr = Mathf.Infinity;
         Vector3 currentPosition = transform.position;
+
+        //For each weapon in the given list
+        //check if the distance between the player and the weapon is smaller than the closestDistanceSqr
+        //if it is, set the weapon as the closest weapon and set its distance to the player to the closestDistanceSqr
         foreach (Weapon potentialTarget in weapons)
         {
             Vector3 directionToTarget = potentialTarget.transform.position - currentPosition;
@@ -35,18 +41,20 @@ public class PickUp : MonoBehaviour
             if (dSqrToTarget < closestDistanceSqr)
             {
                 closestDistanceSqr = dSqrToTarget;
-                closestObject = potentialTarget.transform;
+                closestWeapon = potentialTarget.transform;
             }
         }
 
-        if (Vector3.Distance(transform.position, closestObject.position) < radius)
-            return closestObject;
+        //If the distance between the closest weapon and the player is smaller than the radius
+        //return the weapon, else return null
+        if (Vector3.Distance(transform.position, closestWeapon.position) < _radius)
+            return closestWeapon;
         else
             return null;
     }
 
-    void OnDrawGizmos()
+    void OnDrawGizmosSelected()
     {
-        Gizmos.DrawWireSphere(transform.position, radius);
+        Gizmos.DrawWireSphere(transform.position, _radius);
     }
 }

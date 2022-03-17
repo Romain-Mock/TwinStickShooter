@@ -8,6 +8,8 @@ public class BasicWeapon : Weapon
 
     public override void Shoot()
     {
+        base.Shoot();
+
         Vector3 direction = GetDirection(cannon);
         Ray newRay = new Ray(cannon.position, direction);
         //If the shot hit something
@@ -31,7 +33,5 @@ public class BasicWeapon : Weapon
         }
 
         MuzzleEffect(weaponData, cannon.position);
-
-        base.Shoot();
     }
 }

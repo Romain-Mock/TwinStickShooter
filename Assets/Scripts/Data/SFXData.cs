@@ -5,7 +5,9 @@ using UnityEngine;
 [CreateAssetMenu()]
 public class SFXData : ScriptableObject
 {
-    public AudioClip audioClip;
+    public AudioClip fireClip;
+    public AudioClip reloadClip;
+    public AudioClip emptyMagClip;
     [Range(0, 256)]
     public int priority = 128;
     [Range(0, 1)]

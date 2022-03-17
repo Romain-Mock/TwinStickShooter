@@ -12,7 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42b691f1997b79f41a87cf451d9e7153, type: 3}
   m_Name: AssaultSFX
   m_EditorClassIdentifier: 
-  audioClip: {fileID: 8300000, guid: b36ccbb964506274bab1f3d56544a775, type: 3}
+  fireClip: {fileID: 8300000, guid: dce83977954dec54195d3d3c83e3358e, type: 3}
+  reloadClip: {fileID: 8300000, guid: f28e3325560fe9540a4554815dee974b, type: 3}
+  emptyMagClip: {fileID: 8300000, guid: 2652c3ec0d2f8494594779d58cc20103, type: 3}
   priority: 128
-  volume: 0.1
+  volume: 1
   pitch: 1

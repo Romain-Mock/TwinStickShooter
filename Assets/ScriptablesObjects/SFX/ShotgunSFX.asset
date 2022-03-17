@@ -12,7 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42b691f1997b79f41a87cf451d9e7153, type: 3}
   m_Name: ShotgunSFX
   m_EditorClassIdentifier: 
-  audioClip: {fileID: 8300000, guid: 3eab5c5bd33bd894fb92acbed019b1a4, type: 3}
+  fireClip: {fileID: 8300000, guid: 7b575a2d5a9937a41808fbd12758242b, type: 3}
+  reloadClip: {fileID: 8300000, guid: 1a382bf68ae92a24eabf4f7e530e94e2, type: 3}
+  emptyMagClip: {fileID: 8300000, guid: 09fa97440b3cfe44c9268d070cc2a30d, type: 3}
   priority: 128
-  volume: 0.1
+  volume: 1
   pitch: 1

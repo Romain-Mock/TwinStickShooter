@@ -14,8 +14,8 @@ public class WeaponData : ScriptableObject
     public float damage;
     public float fireRate;
     public float range;
-    public bool addSpread;
-    public bool dualWielding;
+    public int magazineCapacity;
+    public float reloadTime;
 
     [Header("SFX")]
     public SFXData sfxData;
