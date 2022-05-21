@@ -22,18 +22,17 @@ public class WeaponManager : MonoBehaviour
     [SerializeField]
     private Transform _weaponSlotTwo;           //Second weapon anchor
     private int _activeWeapon = 1;              //Weapon currently equipped
-    private Weapon _currentWeapon;              //The weapon that is activated
+    public Weapon _currentWeapon;              //The weapon that is activated
 
-    private float _lastShootTime = 0;           //Last time the player shot (used to calculate when next he can shoot
-    private bool _isSwitching;
+    public bool IsSwitching { get; private set; }
+    private bool _isReloading { get { return _currentWeapon.IsReloading; } }
     [SerializeField]
     private float switchSpeed;
 
-    //Events
-    public static event Action<int, int> OnWeaponUpdateAmmo;    //Update ammo count to display to canvas
-
     //Getters and setters
     public List<Weapon> UnequippedWeapons { get { return _unequippedWeapons; } }
+
+    public static event Action<int, int> OnWeaponUpdateAmmo;    //Update ammo count to display to canvas
 
     //Register and un register input events
     private void OnEnable()
@@ -73,33 +72,13 @@ public class WeaponManager : MonoBehaviour
     private void Update()
     {
         _currentWeapon = GetActiveWeapon().GetChild(0).GetComponent<Weapon>();
-
-        //Shoot input
-        if (_playerInput.Player.FireGamepad.ReadValue<Vector2>() != Vector2.zero)
-        {
-            //If 
-            if (Time.time >= _lastShootTime && !_currentWeapon.IsReloading && !_isSwitching)
-            {
-                if (!_currentWeapon.OutOfAmmo)
-                {
-                    //Shoot periodically according to the fire rate
-                    _lastShootTime = Time.time + 1f / _currentWeapon.weaponData.fireRate;
-                    Shoot();
-                    OnWeaponUpdateAmmo?.Invoke(_currentWeapon.currentAmmos, _currentWeapon.ammosInMag);
-                }
-                else
-                {
-                    _currentWeapon.PlaySound(_currentWeapon.weaponData.sfxData.emptyMagClip);
-                }
-            }
-        }
     }
 
     //Update la liste des armes disponibles de la scene (celles qui ne sont pas tenues par le joueur ou les ennemis
     private void UpdateWeaponsList()
     {
         Debug.Log("Updating weapon list");
-        foreach (Weapon go in GameObject.FindObjectsOfType<Weapon>())
+        foreach (Weapon go in FindObjectsOfType<Weapon>())
         {
             if (!go.IsEquipped && !_unequippedWeapons.Contains(go))           //Si l'arme est n'est pas équippée on l'ajoute à la liste
             {
@@ -118,7 +97,7 @@ public class WeaponManager : MonoBehaviour
     {
         Weapon newWeapon;
 
-        if (_pickUp.ClosestObject != null)
+        if (_pickUp.ClosestObject != null && !_isReloading)
         {
             newWeapon = _pickUp.ClosestObject.GetComponent<Weapon>();
 
@@ -129,8 +108,6 @@ public class WeaponManager : MonoBehaviour
 
             UpdateWeaponsList();    //Update unequipped weapon list
         }
-
-        OnWeaponUpdateAmmo?.Invoke(_currentWeapon.currentAmmos, _currentWeapon.ammosInMag);
     }
 
     void PickUpWeapon(Weapon newWeapon)
@@ -143,6 +120,7 @@ public class WeaponManager : MonoBehaviour
         newWeapon.transform.rotation = GetActiveWeapon().transform.rotation;
         newWeapon.transform.SetParent(GetActiveWeapon().transform);
         newWeapon.IsEquipped = true;  //Set new weapon as equipped
+        OnWeaponUpdateAmmo?.Invoke(newWeapon.currentAmmos, newWeapon.ammosInMag);
     }
     
     //Unparent given weapon
@@ -162,9 +140,8 @@ public class WeaponManager : MonoBehaviour
     {
         Debug.Log("Weapon switch");
 
-        StartCoroutine(SwitchWeapons());
-
-        OnWeaponUpdateAmmo?.Invoke(_currentWeapon.currentAmmos, _currentWeapon.ammosInMag);
+        if (!_isReloading && !IsSwitching)
+            StartCoroutine(SwitchWeapons());
     }
 
     IEnumerator SwitchWeapons()
@@ -183,13 +160,13 @@ public class WeaponManager : MonoBehaviour
             _activeWeapon = 1;
         }
 
-        _isSwitching = true;
+        IsSwitching = true;
 
         GetComponent<AudioSource>().Play();
 
         yield return new WaitForSeconds(switchSpeed);
 
-        _isSwitching = false;
+        IsSwitching = false;
     }
 
     //Return the gameobject of the active weapon
@@ -214,15 +191,5 @@ public class WeaponManager : MonoBehaviour
         weapon2.GetComponent<Rigidbody>().isKinematic = true;
         weapon2.name = "Starting Weapon 2";
         _weaponSlotTwo.gameObject.SetActive(false);
-    }
-
-    //Get the active weapon and shoot
-    public void Shoot()
-    {
-        //If the weapon is hitscan 
-        if (_currentWeapon.weaponData.weaponType == WeaponData.WeaponType.Hitscan)
-        {
-            _currentWeapon.Shoot();
-        }
     }
 }

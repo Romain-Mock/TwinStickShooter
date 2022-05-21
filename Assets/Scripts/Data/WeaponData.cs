@@ -16,9 +16,12 @@ public class WeaponData : ScriptableObject
     public float range;
     public int magazineCapacity;
     public float reloadTime;
+    public float aimAssist;
 
     [Header("SFX")]
-    public SFXData sfxData;
+    public AudioClip shotSfx;
+    public AudioClip reloadSfx;
+    public AudioClip emptySfx;
 
     [Header("Bullet prefab")]
     public GameObject bullet;

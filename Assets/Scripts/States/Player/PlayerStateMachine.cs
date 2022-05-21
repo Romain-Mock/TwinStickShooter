@@ -2,57 +2,61 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TMPro;
 
 public class PlayerStateMachine : MonoBehaviour
 {
-    private Rigidbody _rb;
     private PlayerInputActions _playerInputAction;
-    private Animator _animator;
-
-    //States
-    private PlayerState _currentState;
+    private FieldOfView _fov;
     private PlayerStateFactory _states;
+    public Weapon _currentWeapon;
 
     Vector3 mouseWorldPos;
-
-    private bool _canMove;
-    private Vector3 _moveDirection;
-    private bool _isMoving;
-
-    private Vector3 _aimDirection;
-    private bool _isAiming;
-    private Vector3 _wantedDirection;
-
-    private bool _isRolling;
 
     [Tooltip("Movement speed"), SerializeField]
     private float _moveSpeed = 5f;
     [Tooltip("Roll speed"), SerializeField]
     private float _rollSpeed = 15f;
 
+    public TextMeshPro stateText;
+
     //Getters and setters
-    public PlayerState CurrentState { get { return _currentState; } set { _currentState = value; } }
-    public Rigidbody Rigidbody { get { return _rb; } }
-    public Animator Animator { get { return _animator; } }
-    public Vector3 MoveDirection { get { return _moveDirection; } }
-    public Vector3 AimDirection { get { return _aimDirection; } }
+    public PlayerState CurrentState { get; set; }
+    public WeaponManager WeaponManager { get; private set; }
+    public Rigidbody Rigidbody { get; private set; }
+    public Animator Animator { get; private set; }
+    public Vector3 MoveDirection { get; private set; }
+    public Vector3 AimDirection { get; private set; }
     public float MoveSpeed { get { return _moveSpeed;} set { _moveSpeed = value; } }
     public float RollSpeed { get { return _rollSpeed; } set { _rollSpeed = value; } }
-    public bool IsMoving { get { return _isMoving; } }
-    public bool IsAiming { get { return _isAiming; } }
-    public bool IsRolling { get { return _isRolling; } set { _isRolling = value; } }
-    public bool CanMove { get { return _canMove; } set { _canMove = value; } }
-    public Vector3 WantedDirection { get { return _wantedDirection; } set { _wantedDirection = value; } }
+    public bool IsMoving { get; private set; }
+    public bool IsAiming { get; private set; }
+    public bool IsRolling { get; set; }
+    public bool CanMove { get; set; }
+    public Vector3 WantedDirection { get; set; }
 
+    private void OnEnable()
+    {
+        _playerInputAction.Player.Enable();
+    }
+
+    private void OnDisable()
+    {
+        _playerInputAction.Player.Disable();
+    }
 
     void Awake()
     {
-        _rb = GetComponent<Rigidbody>();
-        _animator = GetComponent<Animator>();
+        Rigidbody = GetComponent<Rigidbody>();
+        Animator = GetComponent<Animator>();
+        _fov = GetComponent<FieldOfView>();
 
         _states = new PlayerStateFactory(this);
-        _currentState = _states.Grounded();
-        _currentState.EnterState();
+        CurrentState = _states.Idle();
+        CurrentState.EnterState();
+
+        WeaponManager = FindObjectOfType<WeaponManager>();
+        _currentWeapon = WeaponManager._currentWeapon;
 
         _playerInputAction = new PlayerInputActions();
         _playerInputAction.Player.Enable();
@@ -62,6 +66,7 @@ public class PlayerStateMachine : MonoBehaviour
         _playerInputAction.Player.FireGamepad.started += OnAimInput;
         _playerInputAction.Player.FireGamepad.performed += OnAimInput;
         _playerInputAction.Player.FireGamepad.canceled += OnAimInput;
+        //_playerInputAction.Player.LookMouse.performed += OnMouseMove;
         _playerInputAction.Player.Roll.started += OnRolling;
     }
 
@@ -74,44 +79,62 @@ public class PlayerStateMachine : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        _currentState.UpdateStates();
+        stateText.text = CurrentState.ToString();
 
-        Rotate(_wantedDirection);
+        _currentWeapon = WeaponManager._currentWeapon;
+
+        CurrentState.UpdateState();
+
+        Rotate(WantedDirection);
+
+        _fov.FindVisibleTargets();
+
+        Rigidbody.velocity = new Vector3(0, -1, 0);
     }
 
     void OnMovementInput(InputAction.CallbackContext context)
     {
         Vector2 moveInput = context.ReadValue<Vector2>();   //Movement input (ZQSD / Left stick)
-        _moveDirection = new Vector3(moveInput.x, 0, moveInput.y).normalized; //Movement normalized in 3D
-        _isMoving = moveInput.x != 0 || moveInput.y != 0;
+        MoveDirection = new Vector3(moveInput.x, 0, moveInput.y).normalized; //Movement normalized in 3D
+        IsMoving = moveInput.x != 0 || moveInput.y != 0;
 }
 
     void OnAimInput(InputAction.CallbackContext context)
     {
         Vector2 aimInput = context.ReadValue<Vector2>();   //Aiming input (Mouse / Right stick)
-         _aimDirection = new Vector3(aimInput.x, 0, aimInput.y).normalized;   //Aiming normalized in 3D
-        _isAiming = aimInput.x != 0 || aimInput.y != 0;
+        AimDirection = new Vector3(aimInput.x, 0, aimInput.y).normalized;   //Aiming normalized in 3D
+        IsAiming = aimInput.x != 0 || aimInput.y != 0;
+    }
+
+    void OnMouseMove(InputAction.CallbackContext context)
+    {
+        Ray mouseRay = Camera.main.ScreenPointToRay(_playerInputAction.Player.LookMouse.ReadValue<Vector2>());   //Tranform the mouse pos in screen value to world value
+
+        Plane p = new Plane(Vector3.up, Vector3.zero);  //Create a plane for the mouse raycast to hit
+
+        //If the raycast hit the plane
+        if (p.Raycast(mouseRay, out float hitDist))
+        {
+            Vector3 hitPoint = mouseRay.GetPoint(hitDist); //Locate the mouse
+            AimDirection = new Vector3(hitPoint.x, 0, hitPoint.z);
+            //transform.LookAt(new Vector3(hitPoint.x, transform.position.y, hitPoint.z)); //Rotate the player
+        }
+
+        if (context.phase == InputActionPhase.Performed)
+            IsAiming = true;
+        else if (context.phase == InputActionPhase.Canceled)
+            IsAiming = false;
     }
 
     void OnRolling(InputAction.CallbackContext context)
     {
-        _currentState = _states.Rolling();
-        _currentState.EnterState();
+        CurrentState = _states.Rolling();
+        CurrentState.EnterState();
     }
 
-    public void EndRoll()
+    public void AnimationEnd()
     {
-        _isRolling = false;
-    }
-
-    private void OnEnable()
-    {
-        _playerInputAction.Player.Enable();
-    }
-
-    private void OnDisable()
-    {
-        _playerInputAction.Player.Disable();
+        CurrentState.CheckSwitchStates();
     }
 
     //Rotate the player to a given vector
@@ -121,7 +144,7 @@ public class PlayerStateMachine : MonoBehaviour
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
 
-            _rb.MoveRotation(targetRotation);
+            Rigidbody.MoveRotation(targetRotation);
         }
     }
 }

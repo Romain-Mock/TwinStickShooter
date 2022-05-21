@@ -144,7 +144,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponData: {fileID: 11400000, guid: f69f65ff0d9c99c40b8c17a6542a8f56, type: 2}
-  isEquipped: 0
+  currentAmmos: 0
+  ammosInMag: 0
+  layer:
+    serializedVersion: 2
+    m_Bits: 320
   cannon: {fileID: 3294379772694653281}
 --- !u!54 &4138612746513205694
 Rigidbody:

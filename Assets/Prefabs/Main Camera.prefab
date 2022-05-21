@@ -130,6 +130,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ca6ad2dd985a9b4099421667fce43fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  height: 20
   target: {fileID: 0}
-  distance: -15
+  height: 15
+  distance: -8

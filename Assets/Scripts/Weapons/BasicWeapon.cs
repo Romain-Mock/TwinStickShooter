@@ -6,30 +6,23 @@ public class BasicWeapon : Weapon
 {
     public Transform cannon;
 
-    public override void Shoot()
+    public override void Shoot(Vector3 direction, float range, float aimAssist)
     {
-        base.Shoot();
+        base.Shoot(direction, range, aimAssist);
 
-        Vector3 direction = GetDirection(cannon);
-        Ray newRay = new Ray(cannon.position, direction);
-        //If the shot hit something
         RaycastHit hitInfo;
-        //if (Physics.Raycast(cannon.position, cannon.forward, out hitInfo, weaponData.range))
-        if (Physics.Raycast(newRay, out hitInfo))
+        if (Physics.SphereCast(cannon.position, aimAssist, shootDirection, out hitInfo, range, layer))
         {
-            Debug.Log("Object hit : " + hitInfo.transform.name);
             TrailEffect(weaponData, cannon.position, hitInfo.point, hitInfo.normal);
+            Debug.DrawRay(cannon.position, shootDirection, Color.green);
 
-            //If the object hit is an enemy
-            if (hitInfo.transform.GetComponent<Enemy>())
-            {
-                hitInfo.transform.GetComponent<Enemy>().TakeDamage(weaponData.damage);  //Enemy takes damage
-            }
+            DamageEnemy(hitInfo);
         }
         else
         {
             Debug.DrawRay(cannon.position, direction, Color.red);
-            TrailEffect(weaponData, cannon.position, cannon.position + direction, Vector3.zero);
+            
+            TrailEffect(weaponData, cannon.position, cannon.position + shootDirection, Vector3.zero);
         }
 
         MuzzleEffect(weaponData, cannon.position);

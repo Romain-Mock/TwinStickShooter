@@ -7,40 +7,33 @@ public class DualWeapon : Weapon
 {
     public Transform[] cannons;
 
-    public override void Shoot()
+    public override void Shoot(Vector3 direction, float range, float aimAssist)
     {
-        StartCoroutine(DualShoot());
+        StartCoroutine(DualShoot(direction, range, aimAssist));
     }
 
-    IEnumerator DualShoot()
+    IEnumerator DualShoot(Vector3 direction, float range, float aimAssist)
     {
-        base.Shoot();
-
         foreach (Transform c in cannons)
         {
-            Vector3 direction = GetDirection(c);
-            Ray newRay = new Ray(c.position, direction);
+            base.Shoot(direction, range, aimAssist);
+
             //If the shot hit something
             RaycastHit hitInfo;
-            if (Physics.Raycast(newRay, out hitInfo))
+            if (Physics.SphereCast(c.position, weaponData.aimAssist, shootDirection, out hitInfo, range, layer))
             {
-                Debug.Log("Object hit : " + hitInfo.transform.name);
                 TrailEffect(weaponData, c.position, hitInfo.point, hitInfo.normal);
 
-                //If the object hit is an enemy
-                if (hitInfo.transform.GetComponent<Enemy>())
-                {
-                    hitInfo.transform.GetComponent<Enemy>().TakeDamage(weaponData.damage);  //Enemy takes damage
-                }
+                DamageEnemy(hitInfo);
             }
             else
             {
                 Debug.DrawRay(c.position, c.transform.forward * weaponData.range, Color.red);
-                TrailEffect(weaponData, c.position, c.position + direction, Vector3.zero);
+                TrailEffect(weaponData, c.position, c.position + shootDirection, Vector3.zero);
             }
 
             MuzzleEffect(weaponData, c.position);
-                
+
             yield return new WaitForSeconds(0.5f);
         }   
     }

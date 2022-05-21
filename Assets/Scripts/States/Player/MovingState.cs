@@ -11,7 +11,7 @@ public class MovingState : PlayerState
 
     public override void EnterState()
     {
-        Debug.Log("Enter moving state");
+        //_ctx.Animator.Play("Running");
     }
 
     public override void ExitState()
@@ -36,9 +36,4 @@ public class MovingState : PlayerState
         _ctx.WantedDirection = _ctx.MoveDirection;
         _ctx.Rigidbody.position += _ctx.MoveDirection * _ctx.MoveSpeed * Time.fixedDeltaTime;
     }
-
-    public override void InitializeSubState()
-    {
-
-    }    
 }

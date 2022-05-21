@@ -11,11 +11,6 @@ public class PlayerStateFactory
         _context = currentContext;
     }
 
-    public PlayerState Grounded()
-    {
-        return new GroundedState(_context, this);
-    }
-
     public PlayerState Idle()
     {
         return new IdleState(_context, this);

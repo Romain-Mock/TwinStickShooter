@@ -11,7 +11,7 @@ public class IdleState : PlayerState
 
     public override void EnterState()
     {
-        Debug.Log("Enter Idle state");
+        _ctx.Animator.Play("Idle");
     }
 
     public override void ExitState()
@@ -21,8 +21,8 @@ public class IdleState : PlayerState
 
     public override void CheckSwitchStates()
     {
-        //if (_ctx.IsMoving && _ctx.IsAiming)
-        //    SwitchState(_factory.MovingAndShooting());
+        if (_ctx.IsMoving && _ctx.IsAiming)
+            SwitchState(_factory.MovingAndShooting());
         if (_ctx.IsAiming && !_ctx.IsMoving)
             SwitchState(_factory.Shooting());
         if (_ctx.IsMoving && !_ctx.IsAiming)
@@ -32,10 +32,5 @@ public class IdleState : PlayerState
     public override void UpdateState()
     {
         CheckSwitchStates();
-    }
-
-    public override void InitializeSubState()
-    {
-
     }
 }

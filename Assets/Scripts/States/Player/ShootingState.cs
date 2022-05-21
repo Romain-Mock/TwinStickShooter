@@ -11,7 +11,7 @@ public class ShootingState : PlayerState
 
     public override void EnterState()
     {
-        Debug.Log("Enter Shooting state");
+
     }
 
     public override void ExitState()
@@ -27,7 +27,6 @@ public class ShootingState : PlayerState
             SwitchState(_factory.MovingAndShooting());
         else if (!_ctx.IsAiming && _ctx.IsMoving)
             SwitchState(_factory.Moving());
-
     }
 
     public override void UpdateState()
@@ -35,10 +34,9 @@ public class ShootingState : PlayerState
         CheckSwitchStates();
 
         _ctx.WantedDirection = _ctx.AimDirection;
-    }
 
-    public override void InitializeSubState()
-    {
-
+        _ctx._currentWeapon.StartShoot(
+            _ctx.transform.forward, _ctx._currentWeapon.weaponData.range, _ctx._currentWeapon.weaponData.fireRate, 
+            _ctx._currentWeapon.weaponData.aimAssist);
     }
 }

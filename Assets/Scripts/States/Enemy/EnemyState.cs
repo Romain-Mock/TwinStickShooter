@@ -19,12 +19,13 @@ public abstract class EnemyState
 
     public abstract void CheckSwitchStates();
 
-    protected void SwitchState(PlayerState newState)
+    protected void SwitchState(EnemyState newState)
     {
         ExitState();
 
         newState.EnterState();
+        //Debug.Log("Enemy state : " + newState.ToString());
 
-        //_ctx.CurrentState = newState;
+        _ctx.CurrentState = newState;
     }
 }

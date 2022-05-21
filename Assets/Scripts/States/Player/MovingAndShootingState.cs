@@ -11,8 +11,7 @@ public class MovingAndShootingState : PlayerState
 
     public override void EnterState()
     {
-        
-        Debug.Log("Enter MovingAndShooting state");
+       
     }
 
     public override void ExitState()
@@ -36,10 +35,9 @@ public class MovingAndShootingState : PlayerState
 
         _ctx.WantedDirection = _ctx.AimDirection;
         _ctx.Rigidbody.position += _ctx.MoveDirection * _ctx.MoveSpeed * Time.fixedDeltaTime;
-    }
 
-    public override void InitializeSubState()
-    {
-
+        _ctx._currentWeapon.StartShoot(
+            _ctx._currentWeapon.transform.forward, _ctx._currentWeapon.weaponData.range, _ctx._currentWeapon.weaponData.fireRate,
+            _ctx._currentWeapon.weaponData.aimAssist);
     }
 }

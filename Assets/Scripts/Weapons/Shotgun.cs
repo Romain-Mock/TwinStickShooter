@@ -8,43 +8,38 @@ public class Shotgun : Weapon
     public Vector3 spread;
     public int nbShards;
 
-    public override void Shoot()
+    public override void Shoot(Vector3 direction, float range, float aimAssist)
     {
-        base.Shoot();
+        base.Shoot(direction, range, aimAssist);
 
         for (int i = 0; i < nbShards; i++)
         {
-            Vector3 direction = GetDirection(cannon) * weaponData.range;
-            Ray newRay = new Ray(cannon.position, direction);
+            shootDirection += AddSpread();
+
             RaycastHit hitInfo;
-            Debug.DrawRay(cannon.position, direction, Color.red, 3f);
-            if (Physics.Raycast(newRay, out hitInfo))
+            Debug.DrawRay(cannon.position, shootDirection, Color.red, 3f);
+            if (Physics.Raycast(cannon.position, shootDirection, out hitInfo, range))
             {
                 TrailEffect(weaponData, cannon.position, hitInfo.point, hitInfo.normal);
-                //TrailRenderer trail = Instantiate(weaponData.trailVFX, cannon.position, Quaternion.identity).GetComponent<TrailRenderer>(); //Instantiate the trail particules along the raycast
-                //StartCoroutine(MoveTrail(weaponData, trail, hitInfo.point, hitInfo.normal));
+
+                DamageEnemy(hitInfo);
             }
             else
-            {
-                TrailEffect(weaponData, cannon.position, cannon.position + direction, Vector3.zero);
-                //TrailRenderer trail = Instantiate(weaponData.trailVFX, cannon.position, Quaternion.identity).GetComponent<TrailRenderer>(); //Instantiate the trail particules along the raycast
-                //StartCoroutine(MoveTrail(weaponData, trail, cannon.position + direction, Vector3.zero));
-            }
+                TrailEffect(weaponData, cannon.position, cannon.position + shootDirection, Vector3.zero);
         }
 
         MuzzleEffect(weaponData, cannon.position);
     }
 
-    public override Vector3 GetDirection(Transform c)
+    public Vector3 AddSpread()
     {
-        Vector3 direction = c.forward;
-        direction += new Vector3(
+        Vector3 newSpread = new Vector3(
             Random.Range(-spread.x, spread.x), 
             Random.Range(-spread.y, spread.y),
             Random.Range(-spread.z, spread.z));
 
-        direction.Normalize();
+        newSpread.Normalize();
 
-        return direction;
+        return newSpread;
     }
 }

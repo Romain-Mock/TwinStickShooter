@@ -226,8 +226,19 @@
                 },
                 {
                     "name": "",
-                    "id": "eb847624-b345-4119-be15-5396a7eda311",
+                    "id": "45c8f7b4-2bf4-4044-bdd8-94471439a218",
                     "path": "<Gamepad>/rightStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "FireGamepad",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "eb847624-b345-4119-be15-5396a7eda311",
+                    "path": "<Gamepad>/dpad",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",

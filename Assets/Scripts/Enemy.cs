@@ -2,28 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Enemy : MonoBehaviour
+//Oh the misery
+public class Enemy : Character
 {
-    public EnemyData stats;
-
-    float health;
-
-    // Start is called before the first frame update
-    void Awake()
+    public override void TakeDamage(float value)
     {
-        health = stats.health;
-    }
-
-    public void TakeDamage(float damage)
-    {
-        health -= damage;
-
-        if (health >= 0)
-            Die();
-    }
-
-    void Die()
-    {
-        Destroy(gameObject);
+        base.TakeDamage(value);
     }
 }
