@@ -12,14 +12,12 @@ public class RollingState : PlayerState
     {
         _ctx.WeaponManager.enabled = false;
         _ctx.IsRolling = true;
-        //_ctx.CanMove = false;
         _ctx.Animator.Play("Roll");
     }
 
     public override void ExitState()
     {
         _ctx.WeaponManager.enabled = true;
-        //_ctx.CanMove = true;
         _ctx.Rigidbody.velocity = Vector3.zero;
     }
 

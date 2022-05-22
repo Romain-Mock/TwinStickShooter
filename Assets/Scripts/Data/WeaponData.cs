@@ -24,8 +24,7 @@ public class WeaponData : ScriptableObject
     public AudioClip emptySfx;
 
     [Header("Bullet prefab")]
-    public GameObject bullet;
-    public float bulletSpeed;
+    public BulletData bulletSettings;
 
     [Header("VFX")]
     public GameObject fireVFX;

@@ -155,6 +155,8 @@ public abstract class Weapon : MonoBehaviour
     public void TrailEffect(WeaponData data, Vector3 startPoint, Vector3 hitPoint, Vector3 hitNormal)
     {
         TrailRenderer trail = Instantiate(data.trailVFX, startPoint, Quaternion.identity).GetComponent<TrailRenderer>(); //Instantiate the trail particules along the raycast
+        trail.colorGradient = data.bulletSettings.color;
+        trail.widthCurve = data.bulletSettings.width;
         StartCoroutine(MoveTrail(data, trail, hitPoint, hitNormal));
     }
 
@@ -170,7 +172,7 @@ public abstract class Weapon : MonoBehaviour
         while (distance > 0)
         {
             trail.transform.position = Vector3.Lerp(startPosition, hitPoint, 1 - (distance / startingDistance));
-            distance -= Time.deltaTime * data.bulletSpeed;
+            distance -= Time.deltaTime * data.bulletSettings.speed;
 
             yield return null;
         }

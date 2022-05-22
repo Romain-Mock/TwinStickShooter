@@ -135,7 +135,7 @@ public class WeaponManager : MonoBehaviour
         UpdateWeaponsList();
     }
 
-    //Switch between both equipped weapons
+    //Switch between equipped weapons
     public void SwitchWeapon(InputAction.CallbackContext context)
     {
         Debug.Log("Weapon switch");

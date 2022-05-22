@@ -23,8 +23,7 @@ MonoBehaviour:
   shotSfx: {fileID: 8300000, guid: 46ac8e3c73e1abe47851802ea169144a, type: 3}
   reloadSfx: {fileID: 8300000, guid: 5f95b21a1a4314749bbf2f452522ca17, type: 3}
   emptySfx: {fileID: 8300000, guid: ce4b02a2bccbab84090b2b1b4f35dd2c, type: 3}
-  bullet: {fileID: 0}
-  bulletSpeed: 200
+  bulletSettings: {fileID: 0}
   fireVFX: {fileID: 4268771202324332646, guid: 59f2cec0cb2c2994a8191ebff9d0ecea, type: 3}
   impactVFX: {fileID: 7841751400427298183, guid: 78c1866da7405bd41b6a1ee78997de9c, type: 3}
   trailVFX: {fileID: 8743565315153175522, guid: 7d029291dee72d94ebf0d5d8dc6e4500, type: 3}
